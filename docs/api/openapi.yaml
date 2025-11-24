@@ -1,0 +1,491 @@
+openapi: 3.0.3
+info:
+  title: QuizBuzz API
+  description: |
+    BuzzFeed-style Quiz Engine for Yelling Ant
+    
+    This API powers the QuizBuzz quiz system with support for:
+    - Personality quizzes (weighted outcomes)
+    - Points-based quizzes (scored ranges)
+    - Trivia quizzes (correct/incorrect)
+    - Branching quizzes (dynamic question flow)
+    
+    All routes are namespaced under `/api/quiz` and `/api/admin` for seamless
+    integration with the Yelling Ant platform.
+  version: 1.0.0
+  contact:
+    name: Yelling Ant Development Team
+    email: dev@yellingant.com
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.yellingant.com
+    description: Production server
+
+tags:
+  - name: Quiz
+    description: Public quiz endpoints for users
+  - name: Admin
+    description: Admin endpoints for quiz management
+  - name: Analytics
+    description: Analytics and tracking endpoints
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Check if the API is running
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  service:
+                    type: string
+                    example: QuizBuzz API
+                  version:
+                    type: string
+                    example: 1.0.0
+
+  /api/quiz:
+    get:
+      tags:
+        - Quiz
+      summary: List all published quizzes
+      description: Get a paginated list of all published quizzes
+      parameters:
+        - name: colony
+          in: query
+          description: Filter by colony name
+          schema:
+            type: string
+            example: Culture x Life
+        - name: tag
+          in: query
+          description: Filter by tag
+          schema:
+            type: string
+            example: personality
+        - name: limit
+          in: query
+          description: Number of quizzes to return
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          description: Offset for pagination
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of quizzes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quizzes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QuizListItem'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /api/quiz/{slug}:
+    get:
+      tags:
+        - Quiz
+      summary: Get quiz by slug
+      description: Fetch full quiz data by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: Quiz slug (URL-friendly identifier)
+          schema:
+            type: string
+            example: which-brown-auntie-energy-are-you
+      responses:
+        '200':
+          description: Quiz data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/quiz/{slug}/submit:
+    post:
+      tags:
+        - Quiz
+      summary: Submit quiz answers
+      description: Submit user answers and receive calculated result
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizSubmission'
+      responses:
+        '200':
+          description: Quiz result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResult'
+        '400':
+          description: Invalid submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/admin/upload:
+    post:
+      tags:
+        - Admin
+      summary: Upload images
+      description: Upload quiz images (hero, questions, results, etc.)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Upload successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  files:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UploadedFile'
+
+components:
+  schemas:
+    Quiz:
+      type: object
+      required:
+        - title
+        - slug
+        - type
+        - primary_colony
+        - hero_image
+        - questions
+        - results
+      properties:
+        title:
+          type: string
+          description: Quiz headline
+        dek:
+          type: string
+          description: Subheadline/description
+        slug:
+          type: string
+          description: URL-friendly identifier
+        type:
+          type: string
+          enum: [personality, points, trivia, branching]
+        primary_colony:
+          type: string
+        secondary_colonies:
+          type: array
+          items:
+            type: string
+          maxItems: 2
+        tags:
+          type: array
+          items:
+            type: string
+        hero_image:
+          type: string
+          format: uri
+        theme:
+          $ref: '#/components/schemas/QuizTheme'
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Question'
+        results:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Result'
+        seo:
+          $ref: '#/components/schemas/SEO'
+        ad_config:
+          $ref: '#/components/schemas/AdConfig'
+
+    QuizTheme:
+      type: object
+      properties:
+        bg_color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        primary_color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        text_color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        font_family:
+          type: string
+        button_style:
+          type: string
+          enum: [rounded, pill, square]
+        progress_style:
+          type: string
+          enum: [thin, thick]
+
+    Question:
+      type: object
+      required:
+        - id
+        - text
+        - options
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        image:
+          type: string
+          format: uri
+        type:
+          type: string
+          enum: [single, multi-select, trivia, branching]
+        shuffle:
+          type: boolean
+        min_select:
+          type: integer
+        max_select:
+          type: integer
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+
+    Option:
+      type: object
+      required:
+        - id
+        - text
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        image:
+          type: string
+          format: uri
+        map:
+          type: object
+          additionalProperties:
+            type: number
+        points:
+          type: number
+        correct:
+          type: boolean
+        next:
+          type: string
+
+    Result:
+      type: object
+      required:
+        - title
+        - description
+        - image
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        image:
+          type: string
+          format: uri
+        theme_color:
+          type: string
+        badge:
+          type: string
+        explanation:
+          type: string
+        colony_prompts:
+          type: array
+          items:
+            type: string
+
+    SEO:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        og_image:
+          type: string
+          format: uri
+        noindex:
+          type: boolean
+        utm_template:
+          type: string
+
+    AdConfig:
+      type: object
+      properties:
+        enabled_slots:
+          type: array
+          items:
+            type: string
+        scroll_trigger_slots:
+          type: array
+          items:
+            type: object
+            properties:
+              slot:
+                type: string
+              trigger_percent:
+                type: integer
+
+    QuizListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        title:
+          type: string
+        dek:
+          type: string
+        hero_image:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    QuizSubmission:
+      type: object
+      required:
+        - answers
+      properties:
+        answers:
+          type: array
+          items:
+            type: object
+            required:
+              - question_id
+              - option_ids
+            properties:
+              question_id:
+                type: string
+              option_ids:
+                type: array
+                items:
+                  type: string
+        user_id:
+          type: string
+        session_id:
+          type: string
+
+    QuizResult:
+      type: object
+      properties:
+        outcome_key:
+          type: string
+        outcome:
+          $ref: '#/components/schemas/Result'
+        score:
+          type: number
+        total_possible:
+          type: number
+        percentage:
+          type: number
+        share_url:
+          type: string
+          format: uri
+        share_image:
+          type: string
+          format: uri
+
+    UploadedFile:
+      type: object
+      properties:
+        originalName:
+          type: string
+        filename:
+          type: string
+        url:
+          type: string
+          format: uri
+        cdnUrl:
+          type: string
+          format: uri
+        size:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        status:
+          type: integer
+        path:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

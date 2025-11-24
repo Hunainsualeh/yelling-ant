@@ -1,0 +1,277 @@
+{
+  "title": "How Well Do You Know Black History? Take This Quiz!",
+  "dek": "Test your knowledge of Black history milestones, pioneers, and cultural moments. Can you get 10/10?",
+  "slug": "black-history-trivia-quiz",
+  "type": "trivia",
+  "primary_colony": "The Yard",
+  "secondary_colonies": ["Culture x Life"],
+  "tags": ["trivia", "history", "education", "black-history"],
+  "hero_image": "https://cdn.yellingant.com/quizzes/black-history/hero.jpg",
+  
+  "theme": {
+    "bg_color": "#ffffff",
+    "primary_color": "#000000",
+    "text_color": "#222222",
+    "font_family": "Inter",
+    "button_style": "pill",
+    "progress_style": "thin"
+  },
+  
+  "questions": [
+    {
+      "id": "q1",
+      "text": "In what year did Dr. Martin Luther King Jr. deliver his famous 'I Have a Dream' speech?",
+      "type": "trivia",
+      "options": [
+        {
+          "id": "q1a",
+          "text": "1960",
+          "correct": false
+        },
+        {
+          "id": "q1b",
+          "text": "1963",
+          "correct": true
+        },
+        {
+          "id": "q1c",
+          "text": "1965",
+          "correct": false
+        },
+        {
+          "id": "q1d",
+          "text": "1968",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "text": "Who was the first Black woman to win an Academy Award for Best Actress?",
+      "type": "trivia",
+      "options": [
+        {
+          "id": "q2a",
+          "text": "Viola Davis",
+          "correct": false
+        },
+        {
+          "id": "q2b",
+          "text": "Halle Berry",
+          "correct": true
+        },
+        {
+          "id": "q2c",
+          "text": "Lupita Nyong'o",
+          "correct": false
+        },
+        {
+          "id": "q2d",
+          "text": "Whoopi Goldberg",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "text": "Which HBCU is the alma mater of Kamala Harris?",
+      "image": "hbcu.jpg",
+      "type": "trivia",
+      "options": [
+        {
+          "id": "q3a",
+          "text": "Spelman College",
+          "correct": false
+        },
+        {
+          "id": "q3b",
+          "text": "Howard University",
+          "correct": true
+        },
+        {
+          "id": "q3c",
+          "text": "Morehouse College",
+          "correct": false
+        },
+        {
+          "id": "q3d",
+          "text": "Tuskegee University",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "id": "q4",
+      "text": "Who wrote the novel 'Beloved'?",
+      "type": "trivia",
+      "options": [
+        {
+          "id": "q4a",
+          "text": "Maya Angelou",
+          "correct": false
+        },
+        {
+          "id": "q4b",
+          "text": "Toni Morrison",
+          "correct": true
+        },
+        {
+          "id": "q4c",
+          "text": "Alice Walker",
+          "correct": false
+        },
+        {
+          "id": "q4d",
+          "text": "Zora Neale Hurston",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "id": "q5",
+      "text": "What year did Juneteenth become a federal holiday?",
+      "type": "trivia",
+      "options": [
+        {
+          "id": "q5a",
+          "text": "2019",
+          "correct": false
+        },
+        {
+          "id": "q5b",
+          "text": "2020",
+          "correct": false
+        },
+        {
+          "id": "q5c",
+          "text": "2021",
+          "correct": true
+        },
+        {
+          "id": "q5d",
+          "text": "2022",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "id": "q6",
+      "text": "Who was the first Black Supreme Court Justice?",
+      "type": "trivia",
+      "options": [
+        {
+          "id": "q6a",
+          "text": "Thurgood Marshall",
+          "correct": true
+        },
+        {
+          "id": "q6b",
+          "text": "Clarence Thomas",
+          "correct": false
+        },
+        {
+          "id": "q6c",
+          "text": "Ketanji Brown Jackson",
+          "correct": false
+        },
+        {
+          "id": "q6d",
+          "text": "Earl Warren",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "id": "q7",
+      "text": "In what city did the Montgomery Bus Boycott take place?",
+      "type": "trivia",
+      "options": [
+        {
+          "id": "q7a",
+          "text": "Birmingham, Alabama",
+          "correct": false
+        },
+        {
+          "id": "q7b",
+          "text": "Montgomery, Alabama",
+          "correct": true
+        },
+        {
+          "id": "q7c",
+          "text": "Selma, Alabama",
+          "correct": false
+        },
+        {
+          "id": "q7d",
+          "text": "Atlanta, Georgia",
+          "correct": false
+        }
+      ]
+    }
+  ],
+  
+  "results": {
+    "Perfect Score": {
+      "title": "History Scholar!",
+      "description": "You got 100%! You know your Black history inside and out. This is the kind of knowledge that honors our ancestors and inspires the next generation.",
+      "image": "result-perfect.jpg",
+      "theme_color": "#34c759",
+      "badge": "history_scholar_badge",
+      "explanation": "7 out of 7 correct. Absolutely impressive!",
+      "colony_prompts": [
+        "Share a Black history fact in The Yard.",
+        "Post about who inspires you in Culture x Life."
+      ]
+    },
+    "Great Knowledge": {
+      "title": "Well Done!",
+      "description": "You got most of them right! Your knowledge of Black history is solid. Keep learning and sharing these important stories.",
+      "image": "result-great.jpg",
+      "theme_color": "#0a84ff",
+      "badge": "history_buff_badge",
+      "explanation": "5-6 correct answers. You're on the right track!",
+      "colony_prompts": [
+        "What's one Black history fact everyone should know? Share in The Yard."
+      ]
+    },
+    "Getting There": {
+      "title": "Keep Learning!",
+      "description": "You got some right! There's so much to learn about Black history. Use this as motivation to dive deeper into our rich heritage.",
+      "image": "result-learning.jpg",
+      "theme_color": "#ff9500",
+      "explanation": "3-4 correct. Not bad, but there's room to grow!",
+      "colony_prompts": [
+        "What Black history topic do you want to learn more about? Ask The Yard."
+      ]
+    },
+    "Time to Study": {
+      "title": "Let's Learn Together!",
+      "description": "This quiz was tough, but that's okay! Black history is deep and wide. Start exploring and you'll be amazed by what you discover.",
+      "image": "result-study.jpg",
+      "theme_color": "#e33d2c",
+      "explanation": "0-2 correct, but knowledge is power. Start your journey!",
+      "colony_prompts": [
+        "Drop your favorite Black history documentary recommendation in The Yard."
+      ]
+    }
+  },
+  
+  "seo": {
+    "title": "Black History Trivia Quiz | Test Your Knowledge | Yelling Ant",
+    "description": "How well do you know Black history? Take this 7-question trivia quiz to test your knowledge of pioneers, milestones, and cultural moments.",
+    "utm_template": "utm_source={network}&utm_medium=share&utm_campaign=quiz_black_history_trivia"
+  },
+  
+  "ad_config": {
+    "enabled_slots": [
+      "YA_QUIZ_DESK_TOP_001",
+      "YA_QUIZ_MOB_TOP_001",
+      "YA_QUIZ_DESK_AFTERQ_002",
+      "YA_QUIZ_DESK_AFTERQ_004",
+      "YA_QUIZ_MOB_AFTERQ_002"
+    ]
+  },
+  
+  "status": "published",
+  "version": 1
+}

@@ -1,0 +1,275 @@
+{
+  "title": "Build Your Dream Morning Routine And We'll Tell You Your Money Mindset",
+  "dek": "Your AM habits reveal everything about how you approach wealth.",
+  "slug": "morning-routine-money-mindset",
+  "type": "points",
+  "primary_colony": "Business & Legacy",
+  "secondary_colonies": ["Woman Space"],
+  "tags": ["money", "lifestyle", "self-care", "business"],
+  "hero_image": "https://cdn.yellingant.com/quizzes/morning-money/hero.jpg",
+  
+  "theme": {
+    "bg_color": "#f9f9f9",
+    "primary_color": "#34c759",
+    "text_color": "#1c1c1e",
+    "font_family": "Inter",
+    "button_style": "rounded",
+    "progress_style": "thick"
+  },
+  
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What time do you wake up?",
+      "image": "alarm.gif",
+      "type": "single",
+      "options": [
+        {
+          "id": "q1a",
+          "text": "5:00 AM (early bird gets the bag)",
+          "points": 5
+        },
+        {
+          "id": "q1b",
+          "text": "6:30 AM (balanced)",
+          "points": 3
+        },
+        {
+          "id": "q1c",
+          "text": "8:00 AM (I value my sleep)",
+          "points": 2
+        },
+        {
+          "id": "q1d",
+          "text": "Whenever I wake up naturally",
+          "points": 1
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "text": "First thing you do in the morning:",
+      "type": "single",
+      "options": [
+        {
+          "id": "q2a",
+          "text": "Check my portfolio/bank balance",
+          "points": 5
+        },
+        {
+          "id": "q2b",
+          "text": "Meditation or prayer",
+          "points": 3
+        },
+        {
+          "id": "q2c",
+          "text": "Scroll social media",
+          "points": 1
+        },
+        {
+          "id": "q2d",
+          "text": "Work out",
+          "points": 4
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "text": "Your breakfast choice:",
+      "image": "breakfast.jpg",
+      "type": "single",
+      "options": [
+        {
+          "id": "q3a",
+          "text": "Green smoothie + supplements",
+          "points": 4
+        },
+        {
+          "id": "q3b",
+          "text": "Meal-prepped breakfast",
+          "points": 5
+        },
+        {
+          "id": "q3c",
+          "text": "Coffee only (too busy)",
+          "points": 2
+        },
+        {
+          "id": "q3d",
+          "text": "Whatever's quick and easy",
+          "points": 1
+        }
+      ]
+    },
+    {
+      "id": "q4",
+      "text": "Morning podcast/content:",
+      "type": "single",
+      "options": [
+        {
+          "id": "q4a",
+          "text": "Business news or finance podcasts",
+          "points": 5
+        },
+        {
+          "id": "q4b",
+          "text": "Personal development",
+          "points": 4
+        },
+        {
+          "id": "q4c",
+          "text": "Entertainment/celebrity gossip",
+          "points": 1
+        },
+        {
+          "id": "q4d",
+          "text": "True crime (obviously)",
+          "points": 2
+        }
+      ]
+    },
+    {
+      "id": "q5",
+      "text": "How do you plan your day?",
+      "type": "single",
+      "options": [
+        {
+          "id": "q5a",
+          "text": "Detailed to-do list with priorities",
+          "points": 5
+        },
+        {
+          "id": "q5b",
+          "text": "General idea of tasks",
+          "points": 3
+        },
+        {
+          "id": "q5c",
+          "text": "I wing it",
+          "points": 1
+        },
+        {
+          "id": "q5d",
+          "text": "Time-blocked calendar",
+          "points": 5
+        }
+      ]
+    },
+    {
+      "id": "q6",
+      "text": "Morning affirmation or mindset:",
+      "type": "single",
+      "options": [
+        {
+          "id": "q6a",
+          "text": "I am wealthy and abundant",
+          "points": 5
+        },
+        {
+          "id": "q6b",
+          "text": "I am grateful for what I have",
+          "points": 3
+        },
+        {
+          "id": "q6c",
+          "text": "Let's just survive today",
+          "points": 1
+        },
+        {
+          "id": "q6d",
+          "text": "I manifest my goals daily",
+          "points": 4
+        }
+      ]
+    }
+  ],
+  
+  "point_ranges": [
+    {
+      "min": 24,
+      "max": 30,
+      "result": "CEO Energy"
+    },
+    {
+      "min": 18,
+      "max": 23,
+      "result": "Investor Mindset"
+    },
+    {
+      "min": 12,
+      "max": 17,
+      "result": "Building Wealth"
+    },
+    {
+      "min": 6,
+      "max": 11,
+      "result": "Just Getting Started"
+    }
+  ],
+  
+  "results": {
+    "CEO Energy": {
+      "title": "CEO Energy",
+      "description": "You wake up with purpose and intention. Your morning routine screams discipline, focus, and long-term vision. You treat every day like a business opportunity because you know that's exactly what it is.",
+      "image": "result-ceo.jpg",
+      "theme_color": "#34c759",
+      "badge": "ceo_energy_badge",
+      "explanation": "24-30 points. You're operating at the highest level!",
+      "colony_prompts": [
+        "Share your morning routine secrets in Business & Legacy.",
+        "Drop your best productivity tip in Woman Space."
+      ]
+    },
+    "Investor Mindset": {
+      "title": "Investor Mindset",
+      "description": "You understand that time is money, and you invest in both wisely. Your mornings are structured, intentional, and focused on growth. You're building something sustainable.",
+      "image": "result-investor.jpg",
+      "theme_color": "#0a84ff",
+      "badge": "investor_badge",
+      "explanation": "18-23 points. Solid financial foundation!",
+      "colony_prompts": [
+        "What's your best money-saving tip? Share in Business & Legacy."
+      ]
+    },
+    "Building Wealth": {
+      "title": "Building Wealth",
+      "description": "You're on the path! You have good habits forming, but there's room to level up your routine. Small changes in your morning can lead to big shifts in your money mindset.",
+      "image": "result-building.jpg",
+      "theme_color": "#ff9500",
+      "explanation": "12-17 points. Keep building those habits!",
+      "colony_prompts": [
+        "What's one money goal you're working on? Tell Business & Legacy."
+      ]
+    },
+    "Just Getting Started": {
+      "title": "Just Getting Started",
+      "description": "Your morning routine needs some structure, but that's okay! Everyone starts somewhere. Focus on one or two habits that align with your money goals and build from there.",
+      "image": "result-starter.jpg",
+      "theme_color": "#e33d2c",
+      "explanation": "6-11 points. Time to level up that routine!",
+      "colony_prompts": [
+        "Ask for morning routine advice in Woman Space.",
+        "Share your money journey in Business & Legacy."
+      ]
+    }
+  },
+  
+  "seo": {
+    "title": "Morning Routine Money Mindset Quiz | Yelling Ant",
+    "description": "Build your dream morning routine and discover your money mindset. Are you CEO Energy, Investor Mindset, Building Wealth, or Just Getting Started?",
+    "utm_template": "utm_source={network}&utm_medium=share&utm_campaign=quiz_morning_money"
+  },
+  
+  "ad_config": {
+    "enabled_slots": [
+      "YA_QUIZ_DESK_TOP_001",
+      "YA_QUIZ_MOB_TOP_001",
+      "YA_QUIZ_DESK_AFTERQ_001",
+      "YA_QUIZ_DESK_AFTERQ_003",
+      "YA_QUIZ_MOB_AFTERQ_002"
+    ]
+  },
+  
+  "status": "published",
+  "version": 1
+}

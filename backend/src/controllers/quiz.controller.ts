@@ -1,0 +1,286 @@
+import { Request, Response, NextFunction } from 'express';
+import { query } from '../config/database';
+
+/**
+ * GET /api/quiz
+ * List all published quizzes
+ */
+export const getQuizList = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { colony, tag, limit = '20', offset = '0' } = req.query;
+
+    let queryText = `
+      SELECT id, slug, title, quiz_data->>'dek' as dek, 
+             quiz_data->>'hero_image' as hero_image,
+             quiz_data->'tags' as tags,
+             created_at, updated_at
+      FROM quizzes
+      WHERE status = 'published'
+    `;
+
+    const params: any[] = [];
+
+    // Filter by colony
+    if (colony) {
+      queryText += ` AND (
+        quiz_data->>'primary_colony' = $${params.length + 1}
+        OR quiz_data->'secondary_colonies' ? $${params.length + 1}
+      )`;
+      params.push(colony);
+    }
+
+    // Filter by tag
+    if (tag) {
+      queryText += ` AND quiz_data->'tags' ? $${params.length + 1}`;
+      params.push(tag);
+    }
+
+    queryText += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(limit, offset);
+
+    const result = await query(queryText, params);
+
+    res.json({
+      quizzes: result.rows,
+      total: result.rows.length,
+      limit: parseInt(limit as string),
+      offset: parseInt(offset as string),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/quiz/:slug
+ * Fetch a single quiz by slug
+ */
+export const getQuizBySlug = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { slug } = req.params;
+
+    const result = await query(
+      'SELECT quiz_data FROM quizzes WHERE slug = $1 AND status = $2',
+      [slug, 'published']
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({
+        error: 'Quiz not found',
+        slug,
+      });
+      return;
+    }
+
+    const quizData = result.rows[0].quiz_data;
+
+    // Track view event (analytics)
+    await trackAnalytics(slug, 'quiz_view', {
+      timestamp: new Date().toISOString(),
+    });
+
+    res.json(quizData);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/quiz/:slug/submit
+ * Submit quiz answers and calculate result
+ */
+export const submitQuiz = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { slug } = req.params;
+    const { answers, userId, sessionId } = req.body;
+
+    // Fetch quiz
+    const result = await query(
+      'SELECT quiz_data FROM quizzes WHERE slug = $1 AND status = $2',
+      [slug, 'published']
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({
+        error: 'Quiz not found',
+        slug,
+      });
+      return;
+    }
+
+    const quiz = result.rows[0].quiz_data;
+
+    // Calculate result based on quiz type
+    const calculatedResult = calculateQuizResult(quiz, answers);
+
+    // Track completion event
+    await trackAnalytics(slug, 'quiz_completed', {
+      user_id: userId,
+      session_id: sessionId,
+      outcome: calculatedResult.outcome_key,
+      timestamp: new Date().toISOString(),
+    });
+
+    res.json(calculatedResult);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Calculate quiz result based on type
+ */
+function calculateQuizResult(quiz: any, answers: any[]): any {
+  const { type, results, point_ranges } = quiz;
+
+  if (type === 'personality') {
+    // Weighted outcome calculation
+    const scores: { [key: string]: number } = {};
+
+    answers.forEach((answer) => {
+      const question = quiz.questions.find((q: any) => q.id === answer.questionId);
+      if (!question) return;
+
+      answer.selectedOptions.forEach((optionId: string) => {
+        const option = question.options.find((o: any) => o.id === optionId);
+        if (option && option.map) {
+          Object.entries(option.map).forEach(([outcome, weight]) => {
+            scores[outcome] = (scores[outcome] || 0) + (weight as number);
+          });
+        }
+      });
+    });
+
+    // Find highest scoring outcome
+    const outcomeKey = Object.keys(scores).reduce((a, b) =>
+      scores[a] > scores[b] ? a : b
+    );
+
+    return {
+      outcome_key: outcomeKey,
+      outcome: results[outcomeKey],
+      scores,
+      share_url: `${process.env.API_BASE_URL}/quiz/${quiz.slug}`,
+      share_image: results[outcomeKey].image,
+    };
+  } else if (type === 'points') {
+    // Points calculation
+    let totalPoints = 0;
+
+    answers.forEach((answer) => {
+      const question = quiz.questions.find((q: any) => q.id === answer.questionId);
+      if (!question) return;
+
+      answer.selectedOptions.forEach((optionId: string) => {
+        const option = question.options.find((o: any) => o.id === optionId);
+        if (option && typeof option.points === 'number') {
+          totalPoints += option.points;
+        }
+      });
+    });
+
+    // Find result by point range
+    const range = point_ranges?.find(
+      (r: any) => totalPoints >= r.min && totalPoints <= r.max
+    );
+
+    const outcomeKey = range?.result || Object.keys(results)[0];
+
+    return {
+      outcome_key: outcomeKey,
+      outcome: results[outcomeKey],
+      score: totalPoints,
+      share_url: `${process.env.API_BASE_URL}/quiz/${quiz.slug}`,
+      share_image: results[outcomeKey].image,
+    };
+  } else if (type === 'trivia') {
+    // Trivia scoring
+    let correctCount = 0;
+    let totalQuestions = 0;
+
+    answers.forEach((answer) => {
+      const question = quiz.questions.find((q: any) => q.id === answer.questionId);
+      if (!question) return;
+
+      totalQuestions++;
+
+      const isCorrect = answer.selectedOptions.every((optionId: string) => {
+        const option = question.options.find((o: any) => o.id === optionId);
+        return option?.correct === true;
+      });
+
+      if (isCorrect) correctCount++;
+    });
+
+    // Find result by score percentage
+    const percentage = (correctCount / totalQuestions) * 100;
+    const outcomeKey = getTriviOutcome(percentage, results);
+
+    return {
+      outcome_key: outcomeKey,
+      outcome: results[outcomeKey],
+      score: correctCount,
+      total_possible: totalQuestions,
+      percentage,
+      share_url: `${process.env.API_BASE_URL}/quiz/${quiz.slug}`,
+      share_image: results[outcomeKey].image,
+    };
+  }
+
+  // Default fallback
+  return {
+    outcome_key: Object.keys(results)[0],
+    outcome: results[Object.keys(results)[0]],
+    share_url: `${process.env.API_BASE_URL}/quiz/${quiz.slug}`,
+    share_image: results[Object.keys(results)[0]].image,
+  };
+}
+
+/**
+ * Get trivia outcome based on percentage
+ */
+function getTriviOutcome(percentage: number, results: any): string {
+  if (percentage >= 90) return Object.keys(results)[0]; // Perfect
+  if (percentage >= 70) return Object.keys(results)[1] || Object.keys(results)[0]; // Great
+  if (percentage >= 50) return Object.keys(results)[2] || Object.keys(results)[0]; // Good
+  return Object.keys(results)[3] || Object.keys(results)[0]; // Try again
+}
+
+/**
+ * Track analytics event
+ */
+async function trackAnalytics(
+  quizSlug: string,
+  eventType: string,
+  eventData: any
+): Promise<void> {
+  try {
+    await query(
+      `INSERT INTO quiz_analytics (quiz_slug, event_type, event_data, user_id, session_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        quizSlug,
+        eventType,
+        eventData,
+        eventData.user_id || null,
+        eventData.session_id || null,
+        new Date(),
+      ]
+    );
+  } catch (error) {
+    console.error('Analytics tracking error:', error);
+    // Don't throw - analytics failure shouldn't break the request
+  }
+}

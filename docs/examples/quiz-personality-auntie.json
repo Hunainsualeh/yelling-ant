@@ -1,0 +1,265 @@
+{
+  "title": "Which Brown Auntie Energy Are You?",
+  "dek": "Pick your Saturday vibes and we'll tell you exactly which type of auntie you are.",
+  "slug": "which-brown-auntie-energy-are-you",
+  "type": "personality",
+  "primary_colony": "Culture x Life",
+  "secondary_colonies": ["The Yard", "Woman Space"],
+  "tags": ["identity", "fun", "culture", "personality"],
+  "hero_image": "https://cdn.yellingant.com/quizzes/auntie/hero.jpg",
+  "images_base": "https://cdn.yellingant.com/quizzes/auntie/",
+  
+  "theme": {
+    "bg_color": "#f5f0e8",
+    "primary_color": "#e33d2c",
+    "text_color": "#222222",
+    "font_family": "Inter",
+    "button_style": "rounded",
+    "progress_style": "thick"
+  },
+  
+  "questions": [
+    {
+      "id": "q1",
+      "text": "Pick a Saturday plan:",
+      "image": "q1-hero.jpg",
+      "type": "single",
+      "shuffle": true,
+      "options": [
+        {
+          "id": "q1a",
+          "text": "Hosting a cookout with the whole family",
+          "image": "cookout.jpg",
+          "map": { "The Nurturer": 3, "The Life of the Party": 1 }
+        },
+        {
+          "id": "q1b",
+          "text": "Church followed by lunch discussions",
+          "image": "church.jpg",
+          "map": { "The Believer": 3, "The Truth-Teller": 1 }
+        },
+        {
+          "id": "q1c",
+          "text": "One-on-one advice sessions over chai",
+          "image": "chai.jpg",
+          "map": { "The Truth-Teller": 3, "The Nurturer": 1 }
+        },
+        {
+          "id": "q1d",
+          "text": "Planning the next big family event",
+          "image": "planning.jpg",
+          "map": { "The Visionary": 3, "The Life of the Party": 2 }
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "text": "Your signature dish:",
+      "type": "single",
+      "shuffle": true,
+      "options": [
+        {
+          "id": "q2a",
+          "text": "Biryani that takes all day",
+          "image": "biryani.jpg",
+          "map": { "The Nurturer": 2, "The Believer": 1 }
+        },
+        {
+          "id": "q2b",
+          "text": "Fusion tacos with a twist",
+          "image": "tacos.jpg",
+          "map": { "The Visionary": 3 }
+        },
+        {
+          "id": "q2c",
+          "text": "Classic soul food",
+          "image": "soulfood.jpg",
+          "map": { "The Life of the Party": 2, "The Nurturer": 2 }
+        },
+        {
+          "id": "q2d",
+          "text": "Whatever the family recipe says",
+          "image": "traditional.jpg",
+          "map": { "The Believer": 3 }
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "text": "When someone asks for advice, you:",
+      "type": "single",
+      "options": [
+        {
+          "id": "q3a",
+          "text": "Tell them the hard truth they need to hear",
+          "map": { "The Truth-Teller": 3 }
+        },
+        {
+          "id": "q3b",
+          "text": "Listen and help them figure it out",
+          "map": { "The Nurturer": 3 }
+        },
+        {
+          "id": "q3c",
+          "text": "Share a Bible verse or life wisdom",
+          "map": { "The Believer": 3 }
+        },
+        {
+          "id": "q3d",
+          "text": "Turn it into a group discussion",
+          "map": { "The Life of the Party": 2, "The Visionary": 1 }
+        }
+      ]
+    },
+    {
+      "id": "q4",
+      "text": "Your ideal vacation:",
+      "image": "vacation.gif",
+      "type": "single",
+      "options": [
+        {
+          "id": "q4a",
+          "text": "Spiritual retreat or pilgrimage",
+          "image": "retreat.jpg",
+          "map": { "The Believer": 3 }
+        },
+        {
+          "id": "q4b",
+          "text": "Family reunion somewhere tropical",
+          "image": "tropical.jpg",
+          "map": { "The Nurturer": 2, "The Life of the Party": 2 }
+        },
+        {
+          "id": "q4c",
+          "text": "Solo trip to explore new cultures",
+          "image": "solo.jpg",
+          "map": { "The Visionary": 3, "The Truth-Teller": 1 }
+        },
+        {
+          "id": "q4d",
+          "text": "Girls' trip with non-stop fun",
+          "image": "girls-trip.jpg",
+          "map": { "The Life of the Party": 3 }
+        }
+      ]
+    },
+    {
+      "id": "q5",
+      "text": "At family gatherings, you're usually:",
+      "type": "single",
+      "options": [
+        {
+          "id": "q5a",
+          "text": "Making sure everyone is fed and happy",
+          "map": { "The Nurturer": 3 }
+        },
+        {
+          "id": "q5b",
+          "text": "Leading the gossip circle",
+          "map": { "The Truth-Teller": 2, "The Life of the Party": 2 }
+        },
+        {
+          "id": "q5c",
+          "text": "Organizing games or activities",
+          "map": { "The Visionary": 3 }
+        },
+        {
+          "id": "q5d",
+          "text": "Sharing blessings before the meal",
+          "map": { "The Believer": 3 }
+        }
+      ]
+    }
+  ],
+  
+  "results": {
+    "The Nurturer": {
+      "title": "The Nurturer",
+      "description": "You're the auntie who makes sure everyone is fed, loved, and taken care of. Your home is always open, your food is legendary, and you remember everyone's favorite dish. You're the emotional backbone of the family.",
+      "image": "result-nurturer.jpg",
+      "theme_color": "#e33d2c",
+      "badge": "nurturer_badge",
+      "explanation": "You picked all the caring, family-first options. Classic nurturer energy!",
+      "colony_prompts": [
+        "Share your best family recipe in Woman Space.",
+        "Post about what family means to you in Culture x Life."
+      ]
+    },
+    "The Truth-Teller": {
+      "title": "The Truth-Teller",
+      "description": "You don't sugarcoat anything. You're the auntie who tells it like it is, whether people want to hear it or not. Your advice is direct, honest, and usually exactly what someone needs (even if they don't realize it yet).",
+      "image": "result-truth-teller.jpg",
+      "theme_color": "#0a84ff",
+      "badge": "truth_teller_badge",
+      "explanation": "You value honesty over comfort. That's real auntie wisdom right there.",
+      "colony_prompts": [
+        "Share your best piece of advice in The Yard."
+      ]
+    },
+    "The Believer": {
+      "title": "The Believer",
+      "description": "Faith guides everything you do. You're the auntie who has a prayer for every situation and keeps the family grounded in tradition and spirituality. Your wisdom comes from a higher place.",
+      "image": "result-believer.jpg",
+      "theme_color": "#af52de",
+      "badge": "believer_badge",
+      "explanation": "Your choices showed strong faith and tradition. Stay blessed!",
+      "colony_prompts": [
+        "Share a prayer or blessing in Culture x Life."
+      ]
+    },
+    "The Life of the Party": {
+      "title": "The Life of the Party",
+      "description": "You bring the energy wherever you go! You're the auntie who turns every gathering into a celebration, knows all the latest dances, and makes sure everyone is having a good time. Life is too short to be boring.",
+      "image": "result-party.jpg",
+      "theme_color": "#ff9500",
+      "badge": "party_badge",
+      "explanation": "You picked fun every time. The family needs that energy!",
+      "colony_prompts": [
+        "Share your party planning tips in Woman Space."
+      ]
+    },
+    "The Visionary": {
+      "title": "The Visionary",
+      "description": "You're always thinking ahead. You're the auntie who encourages everyone to dream bigger, try new things, and break out of their comfort zones. You're modern, forward-thinking, and all about growth.",
+      "image": "result-visionary.jpg",
+      "theme_color": "#34c759",
+      "badge": "visionary_badge",
+      "explanation": "You chose innovation and growth. That's visionary auntie energy!",
+      "colony_prompts": [
+        "Share your 12-month goals in Business & Legacy."
+      ]
+    }
+  },
+  
+  "seo": {
+    "title": "Which Brown Auntie Energy Are You? | Yelling Ant Quiz",
+    "description": "Find out which type of auntie you are in 60 seconds. Are you The Nurturer, The Truth-Teller, The Believer, The Life of the Party, or The Visionary?",
+    "og_image": "og-auntie.jpg",
+    "noindex": false,
+    "utm_template": "utm_source={network}&utm_medium=share&utm_campaign=quiz_auntie_energy"
+  },
+  
+  "ad_config": {
+    "enabled_slots": [
+      "YA_QUIZ_DESK_TOP_001",
+      "YA_QUIZ_MOB_TOP_001",
+      "YA_QUIZ_DESK_AFTERQ_001",
+      "YA_QUIZ_MOB_AFTERQ_001",
+      "YA_QUIZ_DESK_PRERESULTS_001",
+      "YA_QUIZ_MOB_PRERESULTS_001"
+    ],
+    "scroll_trigger_slots": [
+      {
+        "slot": "YA_QUIZ_DESK_SCROLL_001",
+        "trigger_percent": 50
+      }
+    ]
+  },
+  
+  "sponsored": {
+    "enabled": false
+  },
+  
+  "status": "published",
+  "version": 1
+}
