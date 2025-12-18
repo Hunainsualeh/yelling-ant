@@ -27,13 +27,25 @@ export const uploadImage = async (
 
     const uploadPromises = files.map(async (file) => {
       // Process image with sharp
-      const processedImage = await sharp(file.buffer)
-        .resize(1200, 1200, {
-          fit: 'inside',
-          withoutEnlargement: true,
-        })
-        .webp({ quality: 85 })
-        .toBuffer();
+      const isGif = file.mimetype === 'image/gif';
+
+      // If GIF, extract first frame to use as preview and convert to webp; keep original GIF uploaded too
+      let processedImage: Buffer;
+      if (isGif) {
+        // Extract first frame
+        processedImage = await sharp(file.buffer, { pages: 1 })
+          .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+          .webp({ quality: 80 })
+          .toBuffer();
+      } else {
+        processedImage = await sharp(file.buffer)
+          .resize(1200, 1200, {
+            fit: 'inside',
+            withoutEnlargement: true,
+          })
+          .webp({ quality: 85 })
+          .toBuffer();
+      }
 
       // Generate unique filename
       const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
@@ -55,6 +67,7 @@ export const uploadImage = async (
           cdnUrl: `http://localhost:${process.env.PORT || 5000}/uploads/${filename}`,
           size: processedImage.length,
           mimeType: 'image/webp',
+          alt_text: (req as any).alt_texts ? (req as any).alt_texts[idx] : null,
         };
       } else {
         // S3 upload (when AWS credentials are configured)
@@ -83,6 +96,7 @@ export const uploadImage = async (
           cdnUrl: `${process.env.CDN_URL}/${key}`,
           size: processedImage.length,
           mimeType: 'image/webp',
+          alt_text: (req as any).alt_texts ? (req as any).alt_texts[idx] : null,
         };
       }
     });

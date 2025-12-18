@@ -136,6 +136,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/quiz/{slug}/related:
+    get:
+      tags:
+        - Quiz
+      summary: Get related quizzes
+      description: Get quizzes with overlapping tags
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: Related quizzes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quizzes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QuizListItem'
+
   /api/quiz/{slug}/submit:
     post:
       tags:
@@ -174,6 +204,231 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/admin/quiz:
+    get:
+      tags:
+        - Admin
+      summary: List all quizzes (admin)
+      description: Get all quizzes including drafts, scheduled, and archived
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, scheduled, published, archived]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of quizzes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quizzes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminQuizItem'
+                  total:
+                    type: integer
+
+    post:
+      tags:
+        - Admin
+      summary: Create new quiz
+      description: Create a new quiz (defaults to draft status)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Quiz'
+      responses:
+        '201':
+          description: Quiz created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  quiz:
+                    $ref: '#/components/schemas/AdminQuizItem'
+
+  /api/admin/quiz/{slug}:
+    put:
+      tags:
+        - Admin
+      summary: Update quiz
+      description: Update an existing quiz and increment version
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Quiz'
+      responses:
+        '200':
+          description: Quiz updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  quiz:
+                    $ref: '#/components/schemas/AdminQuizItem'
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete quiz
+      description: Soft delete (archive) a quiz
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Quiz archived
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  quiz:
+                    type: object
+
+  /api/admin/quiz/{slug}/publish:
+    patch:
+      tags:
+        - Admin
+      summary: Publish or unpublish quiz
+      description: Change quiz status between draft and published
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - publish
+              properties:
+                publish:
+                  type: boolean
+      responses:
+        '200':
+          description: Quiz status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  quiz:
+                    type: object
+
+  /api/admin/quiz/{slug}/schedule:
+    post:
+      tags:
+        - Admin
+      summary: Schedule quiz
+      description: Schedule quiz for future publication
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - publish_at
+              properties:
+                publish_at:
+                  type: string
+                  format: date-time
+                  example: "2025-12-01T10:00:00Z"
+      responses:
+        '200':
+          description: Quiz scheduled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  quiz:
+                    type: object
+
+  /api/admin/quiz/{slug}/rollback:
+    post:
+      tags:
+        - Admin
+      summary: Rollback quiz version
+      description: Restore a previous version of the quiz
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - version
+              properties:
+                version:
+                  type: integer
+                  example: 3
+      responses:
+        '200':
+          description: Version rollback info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
   /api/admin/upload:
     post:
       tags:
@@ -207,8 +462,162 @@ paths:
                     items:
                       $ref: '#/components/schemas/UploadedFile'
 
+  /api/admin/images:
+    get:
+      tags:
+        - Admin
+      summary: List uploaded images
+      description: Get list of all uploaded images
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of images
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  images:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                        url:
+                          type: string
+                        uploaded_at:
+                          type: string
+                          format: date-time
+
+  /api/admin/analytics/{slug}:
+    get:
+      tags:
+        - Admin
+      summary: Get quiz analytics
+      description: Get comprehensive analytics for a quiz
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Quiz analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  slug:
+                    type: string
+                  total_views:
+                    type: integer
+                  total_completions:
+                    type: integer
+                  completion_rate:
+                    type: string
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        event_type:
+                          type: string
+                        count:
+                          type: integer
+                  outcome_distribution:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        outcome:
+                          type: string
+                        count:
+                          type: integer
+
+  /api/analytics/track:
+    post:
+      tags:
+        - Analytics
+      summary: Track analytics event
+      description: Track user interactions and quiz events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - quiz_slug
+                - event_type
+              properties:
+                quiz_slug:
+                  type: string
+                  example: which-brown-auntie-energy-are-you
+                event_type:
+                  type: string
+                  enum:
+                    - quiz_view
+                    - quiz_start
+                    - quiz_question_answered
+                    - quiz_completed
+                    - quiz_retaken
+                    - quiz_share_click
+                    - quiz_result_impression
+                    - quiz_result_badge_awarded
+                    - quiz_related_quiz_click
+                event_data:
+                  type: object
+                user_id:
+                  type: string
+                session_id:
+                  type: string
+      responses:
+        '201':
+          description: Event tracked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  event_type:
+                    type: string
+
 components:
   schemas:
+    AdminQuizItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+          enum: [draft, scheduled, published, archived]
+        version:
+          type: integer
+        publish_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
     Quiz:
       type: object
       required:
@@ -425,19 +834,23 @@ components:
           items:
             type: object
             required:
-              - question_id
-              - option_ids
+              - questionId
+              - selectedOptions
             properties:
-              question_id:
+              questionId:
                 type: string
-              option_ids:
+                example: q1
+              selectedOptions:
                 type: array
                 items:
                   type: string
-        user_id:
+                example: [q1-opt1]
+        userId:
           type: string
-        session_id:
+          example: user1234
+        sessionId:
           type: string
+          example: session5678
 
     QuizResult:
       type: object

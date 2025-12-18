@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { getQuizList, getQuizBySlug, submitQuiz } from '../controllers/quiz.controller';
+import { getQuizList, getQuizBySlug, submitQuiz, getRelatedQuizzes } from '../controllers/quiz.controller';
+import { getNextQuestionForAnswer } from '../controllers/branching.controller';
 import { validateQuizSubmission } from '../middleware/validation.middleware';
 import { rateLimiter } from '../middleware/rateLimit.middleware';
 
@@ -20,6 +21,12 @@ router.get('/', getQuizList);
 router.get('/:slug', getQuizBySlug);
 
 /**
+ * GET /api/quiz/:slug/related
+ * Get related quizzes based on tags
+ */
+router.get('/:slug/related', getRelatedQuizzes);
+
+/**
  * POST /api/quiz/:slug/submit
  * Submit quiz answers and get result
  * Rate limited to prevent abuse
@@ -30,5 +37,11 @@ router.post(
   validateQuizSubmission,
   submitQuiz
 );
+
+/**
+ * GET /api/quiz/:slug/feedback
+ * Query: question_id, answer_id => returns next_question_id (if branching) and correctness for trivia
+ */
+router.get('/:slug/feedback', getNextQuestionForAnswer);
 
 export default router;

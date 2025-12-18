@@ -66,6 +66,7 @@ export const getQuizBySlug = async (
 ): Promise<void> => {
   try {
     const { slug } = req.params;
+    const { shuffle = 'false' } = req.query;
 
     const result = await query(
       'SELECT quiz_data FROM quizzes WHERE slug = $1 AND status = $2',
@@ -80,7 +81,23 @@ export const getQuizBySlug = async (
       return;
     }
 
-    const quizData = result.rows[0].quiz_data;
+    let quizData = result.rows[0].quiz_data;
+
+    // Server-side shuffle of options when question.shuffle_options === true or query param shuffle=true
+    if (shuffle === 'true') {
+      quizData = JSON.parse(JSON.stringify(quizData));
+      if (Array.isArray(quizData.questions)) {
+        for (const q of quizData.questions) {
+          if (q.shuffle_options) {
+            // Fisher-Yates shuffle
+            for (let i = q.options.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [q.options[i], q.options[j]] = [q.options[j], q.options[i]];
+            }
+          }
+        }
+      }
+    }
 
     // Track view event (analytics)
     await trackAnalytics(slug, 'quiz_view', {
@@ -106,6 +123,9 @@ export const submitQuiz = async (
     const { slug } = req.params;
     const { answers, userId, sessionId } = req.body;
 
+    // Track quiz start event
+    try { await trackAnalytics(slug, 'quiz_start', { user_id: userId || null, session_id: sessionId || null, timestamp: new Date() }); } catch (e) {}
+
     // Fetch quiz
     const result = await query(
       'SELECT quiz_data FROM quizzes WHERE slug = $1 AND status = $2',
@@ -122,18 +142,32 @@ export const submitQuiz = async (
 
     const quiz = result.rows[0].quiz_data;
 
+    // Track each question_answer event and build per-question feedback
+    const perQuestionFeedback: any[] = [];
+    for (const answer of answers) {
+      try {
+        await trackAnalytics(slug, 'question_answer', { user_id: userId || null, session_id: sessionId || null, question_id: answer.questionId, selected: answer.selectedOptions, timestamp: new Date() });
+      } catch (e) {}
+
+      // For trivia, compute immediate correctness for each answer
+      const question = quiz.questions.find((q: any) => q.id === answer.questionId);
+      if (question) {
+        const isCorrect = question.options ? answer.selectedOptions.every((optId: string) => {
+          const opt = question.options.find((o: any) => o.id === optId);
+          return !!opt && opt.correct === true;
+        }) : null;
+        perQuestionFeedback.push({ questionId: answer.questionId, correct: isCorrect });
+      }
+    }
+
     // Calculate result based on quiz type
     const calculatedResult = calculateQuizResult(quiz, answers);
 
-    // Track completion event
-    await trackAnalytics(slug, 'quiz_completed', {
-      user_id: userId,
-      session_id: sessionId,
-      outcome: calculatedResult.outcome_key,
-      timestamp: new Date().toISOString(),
-    });
+    // Track completion event and result_view
+    try { await trackAnalytics(slug, 'quiz_completed', { user_id: userId || null, session_id: sessionId || null, outcome: calculatedResult.outcome_key, timestamp: new Date() }); } catch (e) {}
+    try { await trackAnalytics(slug, 'result_view', { user_id: userId || null, session_id: sessionId || null, outcome: calculatedResult.outcome_key, timestamp: new Date() }); } catch (e) {}
 
-    res.json(calculatedResult);
+    res.json({ ...calculatedResult, feedback: perQuestionFeedback });
   } catch (error) {
     next(error);
   }
@@ -284,3 +318,54 @@ async function trackAnalytics(
     // Don't throw - analytics failure shouldn't break the request
   }
 }
+
+/**
+ * GET /api/quiz/:slug/related
+ * Get related quizzes based on tags
+ */
+export const getRelatedQuizzes = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { slug } = req.params;
+    const { limit = '5' } = req.query;
+
+    // Get current quiz to extract tags
+    const currentQuiz = await query(
+      'SELECT quiz_data FROM quizzes WHERE slug = $1 AND status = $2',
+      [slug, 'published']
+    );
+
+    if (currentQuiz.rows.length === 0) {
+      res.status(404).json({ error: 'Quiz not found' });
+      return;
+    }
+
+    const tags = currentQuiz.rows[0].quiz_data.tags || [];
+
+    if (tags.length === 0) {
+      res.json({ quizzes: [] });
+      return;
+    }
+
+    // Find quizzes with overlapping tags
+    const result = await query(
+      `SELECT id, slug, title, quiz_data->>'dek' as dek,
+              quiz_data->>'hero_image' as hero_image,
+              quiz_data->'tags' as tags
+       FROM quizzes
+       WHERE status = 'published'
+         AND slug != $1
+         AND quiz_data->'tags' ?| $2
+       ORDER BY created_at DESC
+       LIMIT $3`,
+      [slug, tags, limit]
+    );
+
+    res.json({ quizzes: result.rows });
+  } catch (error) {
+    next(error);
+  }
+};
