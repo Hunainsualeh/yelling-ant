@@ -37,8 +37,9 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 
 // CORS configuration
+// In development include the Vite dev server origin so the admin UI can send Authorization headers
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
 };
 app.use(cors(corsOptions));

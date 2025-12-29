@@ -25,7 +25,7 @@ export const uploadImage = async (
       return;
     }
 
-    const uploadPromises = files.map(async (file) => {
+    const uploadPromises = files.map(async (file, idx) => {
       // Process image with sharp
       const isGif = file.mimetype === 'image/gif';
 
