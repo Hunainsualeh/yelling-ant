@@ -651,7 +651,7 @@ const CreateQuiz: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
+    <div className="min-h-screen bg-[#FFFFFF] flex overflow-x-hidden">
       <div className="hidden lg:block">
         <Sidebar variant="admin" />
       </div>

@@ -30,7 +30,7 @@ const PreviewQuiz: React.FC = () => {
   if (!quizData) return <div className="min-h-screen flex"><Sidebar variant="admin" /><main className="flex-1 p-8">Loading preview…</main></div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-[#FFFFFF] flex">
       <Sidebar variant="admin" />
       <main className="flex-1 p-8">
         <h1 className="text-2xl font-semibold mb-4">Preview: {quizData.title}</h1>

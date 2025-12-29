@@ -3,7 +3,7 @@ import { Sidebar, StatsCard, RecentActivityItem, PerformanceCard, DashboardHeade
 
 const AdminDashboard: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-[#FFFFFF] flex">
       <Sidebar variant="admin" />
 
       <main className="flex-1 p-8">

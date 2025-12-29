@@ -25,13 +25,13 @@ export const MonthSelect: React.FC<Props> = ({ value, onChange, options = defaul
   };
 
   return (
-    <div className={className}>
+    <div className={`flex-none order-1 grow-0 ${className || ''}`}>
       <label className="sr-only">Select month range</label>
       <div className="relative inline-block text-center">
         <select
           value={value}
           onChange={handleChange}
-          className="appearance-none bg-[#D5D5D5] rounded-md py-2 pl-3 pr-8 font-helvetica font-normal border border-gray-200 text-[12px] leading-5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="appearance-none w-[104px] h-[28px] bg-[#FAFAFA] rounded-md py-1 pl-3 pr-8 font-helvetica font-normal border border-[#D5D5D5] text-[12px] leading-5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>

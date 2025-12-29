@@ -31,12 +31,12 @@ const Hero = () => {
         {/* Text Content Section */}
         <div className="flex flex-col items-center text-center gap-3 w-full mb-8">
           {/* Heading */}
-          <h1 className="font-gotham font-medium text-[52px] leading-[64px] tracking-tight text-black max-w-5xl">
+          <h1 className="font-gotham font-medium text-[32px] leading-[40px] md:text-[52px] md:leading-[64px] tracking-tight text-black max-w-5xl px-4">
             Quizzes That Know Your Humor, Your Vibes, and Your Culture
           </h1>
 
           {/* Subheading */}
-          <p className="font-helvetica font-normal text-[24px] text-gray-500 max-w-[768px] mt-1">
+          <p className="font-helvetica font-normal text-[16px] md:text-[24px] text-gray-500 max-w-[768px] mt-1 px-4">
             Jump into the stories, memories, and moments we all grew up with.
           </p>
         </div>

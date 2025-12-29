@@ -58,7 +58,7 @@ const categoryChips = [
 const QuizCategories = () => {
   return (
     <section className="flex flex-col items-center w-full bg-white pt-6 pb-1 mb-[50px] overflow-x-hidden">
-      <div className="flex flex-col items-center w-full w-[90%] mx-auto px-12 sm:px-18 lg:px-26">
+      <div className="flex flex-col items-center w-full w-[90%] mx-auto px-4 sm:px-12 lg:px-26">
         <header className="flex items-center w-full h-16 gap-3 justify-start">
           <h2
             className="font-gotham text-[24px] font-medium text-[24px] leading-[32px] text-[#101828] tracking-[0] text-left"
@@ -67,12 +67,12 @@ const QuizCategories = () => {
           </h2>
         </header>
 
-        <div className="flex items-center gap-3 w-[100%] h-16 flex-wrap justify-center ">
+        <div className="flex items-center gap-3 w-full overflow-x-auto md:overflow-visible flex-nowrap md:flex-wrap justify-start md:justify-center pb-4 md:pb-0 scrollbar-hide">
           {categoryChips.map((chip, index) => (
             <button
               key={`chip-${index}`}
               className={
-                `flex items-center justify-center gap-2 px-6 py-3 h-[48px] rounded-xl whitespace-nowrap transition-all text-center flex-1 w-auto` +
+                `flex items-center justify-center gap-2 px-4 md:px-6 py-2 md:py-3 h-[40px] md:h-[48px] rounded-xl whitespace-nowrap transition-all text-center flex-shrink-0 md:flex-1 w-auto` +
                 (chip.isActive
                   ? ' text-white border-none bg-gradient-to-r from-[#c27aff] to-[#9810fa]'
                   : ' text-[#980ffa] border-2 border-[#980ffa] bg-transparent hover:bg-gradient-to-r hover:from-[#c27aff] hover:to-[#9810fa] hover:text-white hover:border-none')
@@ -83,12 +83,21 @@ const QuizCategories = () => {
                 alt={`${chip.label} icon`}
                 src={chip.icon}
               />
-              <span className="font-helvetica font-normal text-[16px] leading-[24px] tracking-[-0.31px] text-center w-auto">
+              <span className="font-helvetica font-normal text-[14px] md:text-[16px] leading-[24px] tracking-[-0.31px] text-center w-auto">
                 {chip.label}
               </span>
             </button>
           ))}
         </div>
+        <style>{`
+          .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+          }
+          .scrollbar-hide {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+          }
+        `}</style>
       </div>
     </section>
   );

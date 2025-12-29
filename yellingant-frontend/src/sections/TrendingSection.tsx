@@ -89,14 +89,14 @@ const TrendingSection = ({ showHeading = true }: TrendingSectionProps) => {
             </div>
 
             {/* Heading */}
-            <h2 className="font-helvetica font-normal text-[36px] leading-[40px] tracking-[0.37px] text-[#101828] flex items-center">
+            <h2 className="font-helvetica font-normal text-[24px] md:text-[36px] leading-[32px] md:leading-[40px] tracking-[0.37px] text-[#101828] flex items-center">
               Trending Right Now
             </h2>
           </div>
         )}
         
         
-        <div className="grid gap-x-[10px] gap-y-[12px]" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+        <div className="grid gap-x-[10px] gap-y-[12px] justify-items-center" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
           {trendingQuizzes.map((quiz) => {
             // Try to resolve the canonical quiz by slug first
             const resolvedBySlug = quiz.slug ? getQuizBySlug(quiz.slug) : undefined;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export type SidebarVariant = 'admin' | 'compact';
 
@@ -31,6 +31,7 @@ const NavItem: React.FC<{ label: string; to?: string; active?: boolean; icon?: R
 
 const Sidebar: React.FC<{ variant?: SidebarVariant }> = ({ variant = 'admin' }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
 
   const baseStyle = 'flex flex-col bg-white shadow-md h-screen p-4 transition-all duration-200 relative';
   const compactStyle = 'flex flex-col bg-white h-full p-2 relative';
@@ -62,7 +63,8 @@ const Sidebar: React.FC<{ variant?: SidebarVariant }> = ({ variant = 'admin' }) 
         <ul className="space-y-1">
           <NavItem
             label="Dashboard"
-            active
+            to="/admin"
+            active={location.pathname === '/admin'}
             icon={
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
                 <path d="M3 13h8V3H3v10zM3 21h8v-6H3v6zM13 21h8V11h-8v10zM13 3v6h8V3h-8z" fill="currentColor" />
@@ -74,6 +76,7 @@ const Sidebar: React.FC<{ variant?: SidebarVariant }> = ({ variant = 'admin' }) 
           <NavItem
             label="Quizzes"
             to="/admin/quizzes"
+            active={location.pathname.startsWith('/admin/quizzes')}
             icon={
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM6 20V4h7v5h5v11H6z" fill="currentColor" />
@@ -86,7 +89,7 @@ const Sidebar: React.FC<{ variant?: SidebarVariant }> = ({ variant = 'admin' }) 
           <li aria-hidden className={`mx-2 ${collapsed ? 'hidden' : ''}`}>
             <div className="border-t border-gray-200 my-2" />
           </li>
-
+ {/* notificaition 
           <NavItem
             label="Notifications"
             icon={
@@ -96,7 +99,7 @@ const Sidebar: React.FC<{ variant?: SidebarVariant }> = ({ variant = 'admin' }) 
             }
             collapsed={collapsed}
           />
-
+*/}
           <NavItem
             label="Settings"
             icon={
@@ -106,7 +109,7 @@ const Sidebar: React.FC<{ variant?: SidebarVariant }> = ({ variant = 'admin' }) 
             }
             collapsed={collapsed}
           />
-
+ {/* notificaition 
           <NavItem
             label="Support"
             icon={
@@ -115,9 +118,9 @@ const Sidebar: React.FC<{ variant?: SidebarVariant }> = ({ variant = 'admin' }) 
               </svg>
             }
             collapsed={collapsed}
-          />
+          /> */}
         </ul>
-      </nav>
+      </nav> 
 
       <div className="mt-auto pt-4 border-t border-gray-100">
         <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer mb-3">

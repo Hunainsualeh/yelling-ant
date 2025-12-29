@@ -23,7 +23,7 @@ const QuizList: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-[#FFFFFF] flex">
       <Sidebar variant="admin" />
       <main className="flex-1 p-8">
         <h1 className="text-2xl font-semibold mb-4">All Quizzes</h1>
