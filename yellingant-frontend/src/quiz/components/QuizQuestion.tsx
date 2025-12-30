@@ -24,13 +24,16 @@ export const QuizQuestion: React.FC<QuizQuestionProps> = ({
     return null;
   }
 
+  // Get question text - backend sends 'text', frontend uses 'question'
+  const questionText = question.question || (question as any).text || '';
+
   // Text-based multiple choice (A, B, C, D format)
   return (
-    <div className="w-full max-w-[798px] mx-auto">
+    <div className="w-full max-w-[798px] mx-auto px-4 sm:px-0">
       {/* Question Text */}
       <div className="mb-8 -translate-y-4 animate-fade-in opacity-0 text-center bg-black rounded-lg">
-        <h2 className="text-[24px] font-bold font-helvetica text-white py-4 px-6">
-          {question.question}
+        <h2 className="text-[18px] sm:text-[24px] font-bold font-helvetica text-white py-4 px-4 sm:px-6">
+          {questionText}
         </h2>
       </div>
 

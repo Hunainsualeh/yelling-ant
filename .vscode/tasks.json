@@ -1,0 +1,152 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Create Test Quizzes",
+			"type": "shell",
+			"command": "node D:\\yel\\QuizBuzz\\create-quizzes.js",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Create Test Quizzes",
+			"type": "shell",
+			"command": "node D:\\yel\\QuizBuzz\\create-quizzes.js",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "List Published Quizzes",
+			"type": "shell",
+			"command": "curl -s http://localhost:5000/api/quiz | node -e \"const d=[];process.stdin.on('data',c=>d.push(c));process.stdin.on('end',()=>{const j=JSON.parse(d.join(''));console.log('Total quizzes:',j.total);j.quizzes.forEach(q=>console.log('-',q.title));})\"",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "List Quizzes",
+			"type": "shell",
+			"command": "Invoke-RestMethod -Uri 'http://localhost:5000/api/quiz' | ConvertTo-Json -Depth 3",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "List Admin Quizzes",
+			"type": "shell",
+			"command": "Invoke-RestMethod -Uri 'http://localhost:5000/api/admin/quiz' -Headers @{Authorization='Bearer ayW1YVN3g72H'} | Select-Object -ExpandProperty quizzes | ForEach-Object { Write-Host \"$($_.title) - $($_.status)\" }",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Test APIs",
+			"type": "shell",
+			"command": "Write-Host '=== Testing All APIs ===' ; Write-Host '' ; Write-Host '1. Health Check:' ; Invoke-RestMethod -Uri 'http://localhost:5000/health' | ConvertTo-Json -Compress ; Write-Host '' ; Write-Host '2. Public Quiz List:' ; $q = Invoke-RestMethod -Uri 'http://localhost:5000/api/quiz?limit=3' ; Write-Host \"Total: $($q.total) quizzes\" ; Write-Host '' ; Write-Host '3. Admin Quiz List:' ; $aq = Invoke-RestMethod -Uri 'http://localhost:5000/api/admin/quiz?limit=3' -Headers @{Authorization='Bearer ayW1YVN3g72H'} ; Write-Host \"Total: $($aq.total) quizzes (admin)\" ; Write-Host '' ; Write-Host '4. Ads List:' ; try { $ads = Invoke-RestMethod -Uri 'http://localhost:5000/api/ads' -Headers @{Authorization='Bearer ayW1YVN3g72H'} ; Write-Host \"Ads: $($ads.Count)\" } catch { Write-Host \"Ads endpoint: $($_.Exception.Message)\" }",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Test Health",
+			"type": "shell",
+			"command": "Invoke-RestMethod -Uri 'http://localhost:5000/health'",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Test Public Quiz",
+			"type": "shell",
+			"command": "Invoke-RestMethod -Uri 'http://localhost:5000/api/quiz?limit=5'",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Run Migrations",
+			"type": "shell",
+			"command": "cd D:\\yel\\QuizBuzz\\backend ; node scripts/run_migrations.js",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Check DB Tables",
+			"type": "shell",
+			"command": "cd D:\\yel\\QuizBuzz\\backend ; node -e \"const { Pool } = require('pg'); const p = new Pool({ connectionString: 'postgresql://neondb_owner:npg_iedTHw89FZQg@ep-autumn-pond-adufugvh-pooler.c-2.us-east-1.aws.neon.tech/Yellingant?sslmode=require' }); p.query('SELECT table_name FROM information_schema.tables WHERE table_schema = $$public$$').then(r => { console.log('Tables:', r.rows.map(x=>x.table_name)); p.end(); }).catch(e => { console.error(e); p.end(); });\"",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Check and Create Ads Table",
+			"type": "shell",
+			"command": "node D:\\yel\\QuizBuzz\\check-db.js",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Check DB from Backend",
+			"type": "shell",
+			"command": "cd D:\\yel\\QuizBuzz\\backend ; node ../check-db.js",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Check DB Tables Again",
+			"type": "shell",
+			"command": "node D:\\yel\\QuizBuzz\\check-db.js",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Create Test Ads",
+			"type": "shell",
+			"command": "node D:\\yel\\QuizBuzz\\create-ads.js",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Test All APIs",
+			"type": "shell",
+			"command": "node D:\\yel\\QuizBuzz\\test-apis.js",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Create Sidebar Ads",
+			"type": "shell",
+			"command": "node -e \"const http = require('http'); const ads = [{name:'Sidebar Ad 1 - Sports App',brand:'ESPN',status:'active',slot:'sidebar',content:{type:'image',url:'https://images.unsplash.com/photo-1461896836934-28f4f72f2d9b?w=245&h=296&fit=crop',link:'https://espn.com'}},{name:'Sidebar Ad 2 - Gaming',brand:'Xbox',status:'active',slot:'sidebar',content:{type:'image',url:'https://images.unsplash.com/photo-1493711662062-fa541f7f3d24?w=245&h=318&fit=crop',link:'https://xbox.com'}},{name:'Quiz Main Ad - Salon',brand:'Great Nature Salon',status:'active',slot:'quiz-main',content:{type:'image',url:'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&h=150&fit=crop',link:'https://example.com/salon'}}]; async function createAd(ad) { return new Promise((resolve,reject)=>{const data=JSON.stringify(ad);const options={hostname:'localhost',port:5000,path:'/api/ads',method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer ayW1YVN3g72H','Content-Length':Buffer.byteLength(data)}};const req=http.request(options,(res)=>{let body='';res.on('data',chunk=>body+=chunk);res.on('end',()=>resolve({status:res.statusCode,data:body}));});req.on('error',reject);req.write(data);req.end();}); } async function main() { for(const ad of ads) { const r=await createAd(ad); console.log(ad.name+': '+(r.status===201?'Created!':'Failed')); } } main();\"",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Create Quiz Sidebar Ads",
+			"type": "shell",
+			"command": "node D:\\yel\\QuizBuzz\\create-sidebar-ads.js",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Fill Ad Slots",
+			"type": "shell",
+			"command": "node fill-all-ad-slots.js",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "List Ads",
+			"type": "shell",
+			"command": "curl -s http://localhost:5000/api/ads",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "List Ads Node",
+			"type": "shell",
+			"command": "node -e \"fetch('http://localhost:5000/api/ads').then(r=>r.json()).then(d=>console.log(d.map(a=>a.slot + ': ' + a.name)))\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "List Ads Script",
+			"type": "shell",
+			"command": "node list-ads.js",
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

@@ -7,17 +7,28 @@ let pool: Pool | null = null;
  */
 export const connectDatabase = async (): Promise<void> => {
   try {
-    pool = new Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'quizbuzz',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD,
-      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-      max: 20, // Maximum number of clients in the pool
+    const config: any = {
+      max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    });
+      connectionTimeoutMillis: 5000, // Increased timeout
+    };
+
+    if (process.env.DATABASE_URL) {
+      config.connectionString = process.env.DATABASE_URL;
+      // Neon/Cloud DBs usually require SSL
+      if (process.env.DATABASE_URL.includes('sslmode=require')) {
+         config.ssl = { rejectUnauthorized: false };
+      }
+    } else {
+      config.host = process.env.DB_HOST || 'localhost';
+      config.port = parseInt(process.env.DB_PORT || '5432');
+      config.database = process.env.DB_NAME || 'quizbuzz';
+      config.user = process.env.DB_USER || 'postgres';
+      config.password = process.env.DB_PASSWORD;
+      config.ssl = process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false;
+    }
+
+    pool = new Pool(config);
 
     // Test connection
     const client: PoolClient = await pool.connect();
@@ -83,6 +94,16 @@ const initializeSchema = async (): Promise<void> => {
         -- Indexes for performance
         CONSTRAINT unique_slug UNIQUE (slug)
       );
+    `);
+
+    // Ensure columns exist (migration for existing tables)
+    await client.query(`
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1;
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS published_at TIMESTAMP;
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS created_by VARCHAR(255);
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'draft';
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_data JSONB;
     `);
 
     // Create indexes

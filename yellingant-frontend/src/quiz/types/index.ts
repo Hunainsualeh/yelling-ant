@@ -19,6 +19,11 @@ export interface QuizQuestion {
   };
   // For image-options type
   text?: string;
+  // For slider type
+  sliderMin?: number;
+  sliderMax?: number;
+  sliderMinLabel?: string;
+  sliderMaxLabel?: string;
 }
 
 export interface QuizAnswer {

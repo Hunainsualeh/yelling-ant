@@ -59,7 +59,7 @@ const QuizCard = ({ image, title, subtitle, views, badge, className = '', slug =
         )}
         <div className="flex items-center justify-between mt-auto pb-4">
           <div className="flex items-center gap-2 text-[#696F79] font-helvetica font-normal text-[14px] leading-[20px] tracking-[-0.15px] w-auto mt-[0.5px] whitespace-nowrap">
-            <Play className="w-16 h-16" />
+            <Play className="w-4 h-4 text-[#99A1AF] stroke-[#6A7282] stroke-[1.33px]" />
             <span>{views}</span>
           </div>
           <Link

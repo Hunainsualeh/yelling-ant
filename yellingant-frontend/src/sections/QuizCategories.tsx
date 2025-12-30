@@ -1,4 +1,11 @@
+import { useState } from 'react';
+
 const categoryChips = [
+  {
+    label: "Latest",
+    isActive: false,
+    gradient: "",
+  },
   {
     label: "Personality",
     icon: "https://c.animaapp.com/min29ubxIAQkvK/img/icon-14.svg",
@@ -55,7 +62,12 @@ const categoryChips = [
   },
 ];
 
-const QuizCategories = () => {
+interface QuizCategoriesProps {
+  selectedCategory?: string;
+  onSelectCategory?: (category: string) => void;
+}
+
+const QuizCategories = ({ selectedCategory = 'Latest', onSelectCategory = () => {} }: QuizCategoriesProps) => {
   return (
     <section className="flex flex-col items-center w-full bg-white pt-6 pb-1 mb-[50px] overflow-x-hidden">
       <div className="flex flex-col items-center w-full w-[90%] mx-auto px-4 sm:px-12 lg:px-26">
@@ -71,19 +83,30 @@ const QuizCategories = () => {
           {categoryChips.map((chip, index) => (
             <button
               key={`chip-${index}`}
+              onClick={() => onSelectCategory(chip.label)}
               className={
-                `flex items-center justify-center gap-2 px-4 md:px-6 py-2 md:py-3 h-[40px] md:h-[48px] rounded-xl whitespace-nowrap transition-all text-center flex-shrink-0 md:flex-1 w-auto` +
-                (chip.isActive
-                  ? ' text-white border-none bg-gradient-to-r from-[#c27aff] to-[#9810fa]'
-                  : ' text-[#980ffa] border-2 border-[#980ffa] bg-transparent hover:bg-gradient-to-r hover:from-[#c27aff] hover:to-[#9810fa] hover:text-white hover:border-none')
+                `flex items-center justify-center gap-2 px-6 py-3 h-[48px] rounded-xl whitespace-nowrap transition-all text-center flex-shrink-0 md:flex-1 w-auto border ` +
+                (chip.label === selectedCategory
+                  ? 'bg-[#4B2E83] border-[#4B2E83] text-white'
+                  : 'bg-transparent border-[#4B2E83] text-[#4B2E83] hover:bg-[#4B2E83] hover:text-white')
               }
             >
-              <img
-                className="w-5 h-5"
-                alt={`${chip.label} icon`}
-                src={chip.icon}
-              />
-              <span className="font-helvetica font-normal text-[14px] md:text-[16px] leading-[24px] tracking-[-0.31px] text-center w-auto">
+              {chip.icon && (
+                <div
+                  className="w-5 h-5 bg-current"
+                  style={{
+                    maskImage: `url(${chip.icon})`,
+                    WebkitMaskImage: `url(${chip.icon})`,
+                    maskRepeat: 'no-repeat',
+                    WebkitMaskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                    WebkitMaskPosition: 'center',
+                    maskSize: 'contain',
+                    WebkitMaskSize: 'contain'
+                  }}
+                />
+              )}
+              <span className="font-helvetica font-normal text-[16px] leading-[24px] tracking-[-0.3125px] text-center w-auto">
                 {chip.label}
               </span>
             </button>

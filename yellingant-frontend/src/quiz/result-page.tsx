@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { QuizResult as QuizResultComponent } from './components/QuizResult';
 
@@ -16,9 +16,15 @@ const QuizResultPage: React.FC = () => {
     else navigate('/');
   };
 
+  // Redirect if no result in state
+  useEffect(() => {
+    if (!state || !state.result) {
+      navigate('/');
+    }
+  }, [state, navigate]);
+
   if (!state || !state.result) {
-    // If no result in state, redirect back to quiz list
-    navigate('/');
+    // Show loading/nothing while redirecting
     return null;
   }
 

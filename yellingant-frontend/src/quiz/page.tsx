@@ -14,6 +14,7 @@ import Header from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import AdSlot from '../components/ui/AdSlot';
 import AdContainer from '../components/ui/AdContainer';
+import transformQuizData from './utils/transformQuizData';
 
 const QuizPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -36,8 +37,10 @@ const QuizPage: React.FC = () => {
         (async () => {
           try {
             const res = await api.getQuiz(slug);
-            // api.getQuiz returns the quiz object
-            setQuizData(res.quiz || res);
+            // api.getQuiz returns the quiz object - transform it to frontend format
+            const rawQuiz = res.quiz || res;
+            const transformed = transformQuizData(rawQuiz);
+            setQuizData(transformed);
             return;
           } catch (err) {
             // fallback to local data if backend not available or quiz not published

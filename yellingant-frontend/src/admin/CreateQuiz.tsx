@@ -3,17 +3,19 @@ import { Sidebar } from '../components';
 import Button from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import { useToast } from '../components/ui/toast';
 
 type Option = { id: string; text: string; correct: boolean; image?: string };
 type Question = { id: number; text: string; type: string; points: number; options: Option[]; media?: string[] };
 
 const CreateQuiz: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [quizDetails, setQuizDetails] = useState({
     title: 'Introduction to Environmental Science',
     description: 'Test your knowledge about environmental science basics, including renewable energy, ecosystems, and sustainability.',
-    category: 'General Knowledge',
+    category: 'Personality',
     scoring: 'Medium',
   });
 
@@ -196,11 +198,11 @@ const CreateQuiz: React.FC = () => {
         }
       }
       console.log('Quiz saved', res);
-      alert('Quiz saved successfully');
+      showToast('Quiz saved successfully!', 'success');
       return res;
     } catch (err: any) {
       console.error('Save draft error', err);
-      alert('Failed to save draft: ' + (err.message || err));
+      showToast('Failed to save draft: ' + (err.message || err), 'error');
       return undefined;
     }
     finally {
@@ -226,7 +228,7 @@ const CreateQuiz: React.FC = () => {
       navigate(`/admin/preview/${encodeURIComponent(slug)}`);
     } catch (err: any) {
       console.error('Preview error', err);
-      alert('Failed to save preview: ' + (err.message || err));
+      showToast('Failed to save preview: ' + (err.message || err), 'error');
     } finally {
       setIsPublishing(false);
     }
@@ -268,6 +270,12 @@ const CreateQuiz: React.FC = () => {
                     onChange={(e) => setQuizDetails({ ...quizDetails, category: e.target.value })}
                     className="w-full px-4 py-3 bg-[#F9FAFB] border border-gray-200 rounded-[8px] text-[14px] font-medium text-[#2B2B2B]"
                   >
+                    <option>Personality</option>
+                    <option>Love</option>
+                    <option>Pop Celebrity</option>
+                    <option>Movies</option>
+                    <option>Food</option>
+                    <option>Aesthetics</option>
                     <option>General Knowledge</option>
                     <option>Entertainment</option>
                     <option>Lifestyle</option>
@@ -651,13 +659,11 @@ const CreateQuiz: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] flex overflow-x-hidden">
-      <div className="hidden lg:block">
-        <Sidebar variant="admin" />
-      </div>
+    <div className="h-screen bg-[#FFFFFF] flex overflow-hidden">
+      <Sidebar variant="admin" />
 
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
-        <div className="w-full max-w-[1200px] mx-auto">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <div className="w-full mx-auto">
           <div className="bg-white rounded-[12px] overflow-hidden shadow-sm">
             <div className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

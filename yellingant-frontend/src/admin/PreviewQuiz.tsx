@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/ui/Sidebar';
-import api from '../utils/api';
 import QuizContainer from '../quiz/components/QuizContainer';
 
 const PreviewQuiz: React.FC = () => {

@@ -1,7 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar, StatsCard, RecentActivityItem, PerformanceCard, DashboardHeader, MonthSelect } from '../components';
+import { request } from '../utils/api';
 
 const AdminDashboard: React.FC = () => {
+  const [stats, setStats] = useState({
+    totalQuizzes: 0,
+    activeQuizzes: 0,
+    totalPlays: 0,
+    pendingQuizzes: 0
+  });
+  const [recentQuizzes, setRecentQuizzes] = useState<any[]>([]);
+  const [topQuizzes, setTopQuizzes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch all quizzes for stats
+        const data = await request('/api/admin/quiz?limit=100');
+        const quizzes = data.quizzes || [];
+        
+        const published = quizzes.filter((q: any) => q.status === 'published');
+        const drafts = quizzes.filter((q: any) => q.status === 'draft');
+        
+        setStats({
+          totalQuizzes: quizzes.length,
+          activeQuizzes: published.length,
+          totalPlays: 0, // Would need analytics endpoint
+          pendingQuizzes: drafts.length
+        });
+        
+        // Recent quizzes (last 4)
+        setRecentQuizzes(quizzes.slice(0, 4));
+        
+        // Top quizzes (just use first 4 for now)
+        setTopQuizzes(published.slice(0, 4));
+      } catch (e) {
+        console.error('Failed to fetch dashboard data', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FFFFFF] flex">
       <Sidebar variant="admin" />
@@ -17,10 +59,10 @@ const AdminDashboard: React.FC = () => {
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
             title="Total Quizzes"
-            value="40,689"
-            delta="8.5%"
-            deltaType="up"
-            subtitle="Up from past week"
+            value={loading ? '...' : stats.totalQuizzes.toLocaleString()}
+            delta="0%"
+            deltaType="neutral"
+            subtitle="All time"
             icon={<img src="/openbook.svg" alt="openbook" className="w-[52px] h-[52px]" />}
             iconBgColor="bg-white"
           />
@@ -35,28 +77,28 @@ const AdminDashboard: React.FC = () => {
               }
             iconBgColor="bg-white"
 
-            value="10,293"
-            delta="1.3%"
-            deltaType="up"
-            subtitle="Up from past week"
+            value={loading ? '...' : stats.activeQuizzes.toLocaleString()}
+            delta="0%"
+            deltaType="neutral"
+            subtitle="Published"
                         />
 
           <StatsCard
             title="Total Plays"
-            value="$89,000"
-            delta="-4.3%"
-            deltaType="down"
-            subtitle="Down from yesterday"
+            value={loading ? '...' : stats.totalPlays.toLocaleString()}
+            delta="0%"
+            deltaType="neutral"
+            subtitle="All time"
             icon={<img src="/pause.svg" alt="pause" className="w-[52px] h-[52px]" />}
             iconBgColor="bg-white"
           />
 
           <StatsCard
             title="Total Pending"
-            value="2,040"
+            value={loading ? '...' : stats.pendingQuizzes.toLocaleString()}
             delta="0%"
             deltaType="neutral"
-            subtitle="From past two months"
+            subtitle="Drafts"
             icon={<img src="/timer.svg" alt="timer" className="w-[52px] h-[52px]" />}
             iconBgColor="bg-white"
           />
@@ -76,25 +118,60 @@ const AdminDashboard: React.FC = () => {
               />
             </div>
             <div className="space-y-3">
-              <RecentActivityItem title="Which Disney Princess Are You?" typeLabel="Personality" status="Published" plays="2,340" />
-              <RecentActivityItem title="Ultimate Marvel Trivia Challenge" typeLabel="Trivia" status="Published" plays="1,876" />
-              <RecentActivityItem title="Rate These Foods Poll" typeLabel="Poll" status="Published" plays="945" />
-              <RecentActivityItem title="Pick Your Favorites" typeLabel="Image-Choice" status="Draft" plays={0} />
+              {loading ? (
+                <div className="text-gray-500">Loading...</div>
+              ) : recentQuizzes.length === 0 ? (
+                <div className="text-gray-500">No quizzes yet</div>
+              ) : (
+                recentQuizzes.map((q) => (
+                  <RecentActivityItem 
+                    key={q.id}
+                    title={q.title} 
+                    typeLabel={q.quiz_data?.type || 'Quiz'} 
+                    status={q.status === 'published' ? 'Published' : 'Draft'} 
+                    plays={0} 
+                  />
+                ))
+              )}
             </div>
           </div>
 
           <div className="bg-white p-4 rounded-lg shadow-sm">
             <h2 className="font-gotham text-[24px] font-medium text-[#202224] mb-3">Top Performing Quizzes</h2>
             <div className="grid grid-cols-1 gap-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <PerformanceCard title="Introduction to Biology" questions={15} completions={28} percent={75} />
-                <PerformanceCard title="Advanced Chemistry" questions={12} completions={22} percent={68} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <PerformanceCard title="Introduction to Biology" questions={15} completions={28} percent={75} />
-                <PerformanceCard isCreate />
-              </div>
+              {loading ? (
+                <div className="text-gray-500">Loading...</div>
+              ) : topQuizzes.length === 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <PerformanceCard isCreate />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {topQuizzes.slice(0, 2).map((q) => (
+                      <PerformanceCard 
+                        key={q.id}
+                        title={q.title} 
+                        questions={q.quiz_data?.questions?.length || 0} 
+                        completions={0} 
+                        percent={0} 
+                      />
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {topQuizzes.slice(2, 3).map((q) => (
+                      <PerformanceCard 
+                        key={q.id}
+                        title={q.title} 
+                        questions={q.quiz_data?.questions?.length || 0} 
+                        completions={0} 
+                        percent={0} 
+                      />
+                    ))}
+                    <PerformanceCard isCreate />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </section>

@@ -18,6 +18,7 @@ import seoRoutes from './routes/seo.routes';
 import integrationRoutes from './routes/integration.routes';
 import cacheRoutes from './routes/cache.routes';
 import internalRoutes from './routes/internal.routes';
+import adsRoutes from './routes/ads.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { connectDatabase } from './config/database';
 import { getRedis, closeRedis } from './config/redis';
@@ -52,8 +53,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // Response compression
 app.use(compression());
@@ -98,6 +99,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API routes
 app.use('/api/quiz', quizRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ads', adsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/colony', colonyRoutes);
 app.use('/api/user', userRoutes);
