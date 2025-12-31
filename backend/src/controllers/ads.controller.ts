@@ -34,9 +34,15 @@ export const getAds = async (
 
     const result = await query(queryText, params);
     res.json(result.rows);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching ads:', error);
-    res.status(500).json({ error: 'Failed to fetch ads' });
+    // Check if this is a table not found error
+    if (error.code === '42P01') {
+      // Table doesn't exist - return empty array
+      res.json([]);
+      return;
+    }
+    res.status(500).json({ error: 'Failed to fetch ads', message: error.message });
   }
 };
 

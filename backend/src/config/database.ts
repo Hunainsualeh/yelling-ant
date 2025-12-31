@@ -8,9 +8,10 @@ let pool: Pool | null = null;
 export const connectDatabase = async (): Promise<void> => {
   try {
     const config: any = {
-      max: 20,
+      max: 10, // Reduced pool size for serverless
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000, // Increased timeout
+      connectionTimeoutMillis: 30000, // 30 seconds for Neon cold starts
+      statement_timeout: 30000, // 30 second query timeout
     };
 
     if (process.env.DATABASE_URL) {
@@ -56,11 +57,13 @@ export const getPool = (): Pool => {
 };
 
 /**
- * Execute a query
+ * Execute a query with timeout
  */
 export const query = async (text: string, params?: any[]) => {
   const client = await getPool().connect();
   try {
+    // Set statement timeout to 25 seconds
+    await client.query('SET statement_timeout = 25000');
     const result = await client.query(text, params);
     return result;
   } finally {
@@ -151,6 +154,29 @@ const initializeSchema = async (): Promise<void> => {
       );
     `);
 
+    // Create ads table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ads (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        brand VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'active',
+        slot VARCHAR(255),
+        content JSONB,
+        impressions INTEGER DEFAULT 0,
+        clicks INTEGER DEFAULT 0,
+        ctr FLOAT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create ads indexes
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_ads_slot ON ads(slot);
+      CREATE INDEX IF NOT EXISTS idx_ads_status ON ads(status);
+    `);
+
     await client.query('COMMIT');
     console.log('Database schema initialized');
   } catch (error) {
@@ -159,6 +185,21 @@ const initializeSchema = async (): Promise<void> => {
     throw error;
   } finally {
     client.release();
+  }
+};
+
+/**
+ * Warmup database connection by running a simple query
+ * This helps avoid cold start delays on serverless databases like Neon
+ */
+export const warmupDatabase = async (): Promise<void> => {
+  try {
+    console.log('Warming up database connection...');
+    const start = Date.now();
+    await query('SELECT 1');
+    console.log(`Database warmup completed in ${Date.now() - start}ms`);
+  } catch (error) {
+    console.warn('Database warmup failed:', error);
   }
 };
 

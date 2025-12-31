@@ -27,7 +27,7 @@ const router = Router();
  * Upload images for quiz (hero, questions, results, etc.)
  * Supports multiple files
  */
-router.post('/upload', authMiddleware, upload.array('images', 10), uploadImage);
+router.post('/upload', authMiddleware, upload.array('images', 50), uploadImage);
 
 /**
  * GET /api/admin/images

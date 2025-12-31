@@ -42,21 +42,35 @@ export async function request(path: string, opts: RequestInit = {}) {
     // ignore in non-browser environments
   }
 
-  const res = await fetch(url, { credentials: 'include', ...opts, headers });
-  if (!res.ok) {
-    const text = await res.text();
-    try {
-        const json = JSON.parse(text);
-        throw new Error(json.error?.message || json.error || text);
-    } catch (e: any) {
-        if (e.message && !e.message.includes('JSON')) throw e;
-        throw new Error(`API ${res.status} ${res.statusText}: ${text}`);
+  // Add AbortController for timeout (60 seconds to handle slow Neon DB cold starts)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+  try {
+    const res = await fetch(url, { credentials: 'include', ...opts, headers, signal: controller.signal });
+    clearTimeout(timeoutId);
+    
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+          const json = JSON.parse(text);
+          throw new Error(json.error?.message || json.error || text);
+      } catch (e: any) {
+          if (e.message && !e.message.includes('JSON')) throw e;
+          throw new Error(`API ${res.status} ${res.statusText}: ${text}`);
+      }
     }
+    // attempt to parse json, fall back to text
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) return res.json();
+    return res.text();
+  } catch (e: any) {
+    clearTimeout(timeoutId);
+    if (e.name === 'AbortError') {
+      throw new Error('Request timeout - server took too long to respond');
+    }
+    throw e;
   }
-  // attempt to parse json, fall back to text
-  const ct = res.headers.get('content-type') || '';
-  if (ct.includes('application/json')) return res.json();
-  return res.text();
 }
 
 /** Fetch a quiz by slug. Pass `shuffle=true` to ask server to shuffle options. */
@@ -154,4 +168,58 @@ export async function getAllQuizzes(token?: string): Promise<any> {
   });
 }
 
-export default { getQuiz, submitQuiz, uploadImages, createQuiz, updateQuiz, publishQuiz, getAllQuizzes };
+/** Delete a quiz by slug (admin) */
+export async function deleteQuiz(slug: string, token?: string): Promise<any> {
+  return request(`/api/admin/quiz/${encodeURIComponent(slug)}`, {
+    method: 'DELETE',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+}
+
+/** Create a new ad (admin) */
+export async function createAd(adData: any, token?: string): Promise<any> {
+  return request(`/api/ads`, {
+    method: 'POST',
+    body: JSON.stringify(adData),
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+}
+
+/** Update an existing ad by ID (admin) */
+export async function updateAd(id: string, adData: any, token?: string): Promise<any> {
+  return request(`/api/ads/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(adData),
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+}
+
+/** Delete an ad by ID (admin) */
+export async function deleteAd(id: string, token?: string): Promise<any> {
+  return request(`/api/ads/${id}`, {
+    method: 'DELETE',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+}
+
+/** Get all ads */
+export async function getAds(token?: string): Promise<any> {
+  return request(`/api/ads`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+}
+
+export default { 
+  getQuiz, 
+  submitQuiz, 
+  uploadImages, 
+  createQuiz, 
+  updateQuiz, 
+  publishQuiz, 
+  getAllQuizzes,
+  deleteQuiz,
+  createAd,
+  updateAd,
+  deleteAd,
+  getAds
+};

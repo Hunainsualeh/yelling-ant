@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 import AdSlot from '../../components/ui/AdSlot';
@@ -20,6 +19,7 @@ import Navbar from '../../components/layout/Navbar';
 
 type QuizContainerProps = {
   quizData: QuizData;
+  isPreview?: boolean;
 };
 
 type QuizState = {
@@ -30,7 +30,36 @@ type QuizState = {
   isCompleted: boolean;
 };
 
-const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
+const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, isPreview = false }) => {
+  // Normalize quiz data to ensure all fields are present
+  const quizData: QuizData = {
+    ...rawQuizData,
+    // Ensure description exists
+    description: rawQuizData.description || rawQuizData.dek || '',
+    // Ensure heroImage exists
+    heroImage: rawQuizData.heroImage || rawQuizData.hero_image || '',
+    // Ensure totalQuestions is set
+    totalQuestions: rawQuizData.totalQuestions || rawQuizData.questions?.length || 0,
+    // Normalize questions to ensure they have required fields
+    questions: (rawQuizData.questions || []).map((q: any, idx: number) => ({
+      ...q,
+      id: q.id ?? idx + 1,
+      question: q.question || q.text || '',
+      text: q.text || q.question || '',
+      type: q.type || 'single',
+      options: (q.options || []).map((o: any) => ({
+        ...o,
+        label: o.label || o.text || '',
+      })),
+    })),
+    // Ensure results is an array
+    results: Array.isArray(rawQuizData.results) 
+      ? rawQuizData.results 
+      : Object.values(rawQuizData.results || {}).length > 0
+        ? Object.values(rawQuizData.results)
+        : [{ id: 'r1', type: 'default', title: 'Complete!', description: 'You finished the quiz.', image: '' }],
+  };
+
   const initialQuizState: QuizState = {
     currentQuestionIndex: 0,
     answers: {},
@@ -42,7 +71,6 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
   const [quizState, setQuizState] = useState<QuizState>(initialQuizState);
   const [imageRestartKey, setImageRestartKey] = useState(0);
   const [imageStats, setImageStats] = useState<{ correctCount: number; answeredCount: number } | null>(null);
-  const navigate = useNavigate();
 
   const handleAnswerSelect = (answerId: string | string[]) => {
     setQuizState((prev) => ({
@@ -111,8 +139,8 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
   const currentQuestion = quizData.questions[quizState.currentQuestionIndex];
   
   // Map question types from backend to frontend types
-  // Backend uses: single, multiple, image-options, text-input, slider
-  // Frontend components: QuizQuestion (single/multiple), QuizTypeImageOptions, QuizTypeTextInput, QuizTypeSlider, QuizTypeFigmaQuestion
+  // Backend/Admin uses: single, multiple, image-options, image-choice, text-input, slider, figma-image, personality
+  // Frontend components: QuizQuestion (single/multiple), QuizTypeImageOptions, QuizTypeTextInput, QuizTypeSlider, QuizTypeFigmaQuestion, Personality
   const getQuestionType = (question: any): string => {
     if (!question) return 'single';
     // Use explicit question type if provided
@@ -125,10 +153,12 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
   
   const questionType = getQuestionType(currentQuestion);
   
+  // For image-choice type (This/That style), use image-options component
+  const normalizedQuestionType = questionType === 'image-choice' ? 'image-options' : questionType;
+  
   // Debug: log quiz & question types so we can confirm which component branch runs
-  // Remove or comment out after debugging
   // eslint-disable-next-line no-console
-  console.log('QuizContainer debug ->', { slug: quizData.slug, quizType: quizData.type, questionType, currentQuestion });
+  console.log('QuizContainer debug ->', { slug: quizData.slug, quizType: quizData.type, questionType: normalizedQuestionType, currentQuestion });
   const currentAnswer = quizState.answers[quizState.currentQuestionIndex];
 
   if (quizState.isCompleted) {
@@ -218,7 +248,7 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
                         restartKey={imageRestartKey}
                       />
                     )
-                  ) : quizData.type === 'image-options' ? (
+                  ) : quizData.type === 'image-options' || normalizedQuestionType === 'image-options' ? (
                     <QuizTypeImageOptions
                       questions={quizData.questions}
                       onRestart={handleRestart}
@@ -231,19 +261,19 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
                       onAnswerSelect={handleAnswerSelect}
                       selectedAnswer={currentAnswer as string}
                     />
-                  ) : questionType === 'text-input' ? (
+                  ) : normalizedQuestionType === 'text-input' ? (
                     <QuizTypeTextInput
                       question={currentQuestion}
                       selectedAnswer={currentAnswer as string}
                       onAnswerSelect={(val: string) => handleAnswerSelect(val)}
                     />
-                  ) : questionType === 'figma-image' ? (
+                  ) : normalizedQuestionType === 'figma-image' ? (
                     <QuizTypeFigmaQuestion
                       question={currentQuestion}
                       selectedAnswer={currentAnswer as string}
                       onAnswerSelect={(val: string) => handleAnswerSelect(val)}
                     />
-                  ) : questionType === 'slider' ? (
+                  ) : normalizedQuestionType === 'slider' ? (
                     <QuizTypeSlider
                       question={currentQuestion}
                       selectedAnswer={currentAnswer as string}
@@ -289,17 +319,19 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
 
   return (
     <div className="w-full bg-white flex flex-col overflow-x-hidden">
-      <Header />
-      <Navbar />
-      <QuizCategories selectedCategory="" onSelectCategory={() => {}} />
+      {!isPreview && <Header />}
+      {!isPreview && <Navbar />}
+      {!isPreview && <QuizCategories selectedCategory="" onSelectCategory={() => {}} />}
       
       {/* Main Quiz Container with Sidebar Ads */}
       <div className="w-full py-4 sm:py-8 px-2 sm:px-4">
-        <div className="w-full max-w-[1440px] mx-auto grid grid-cols-1 xl:grid-cols-[auto_minmax(300px,846px)_auto] gap-2 sm:gap-4 items-start">
+        <div className={`w-full max-w-[1440px] mx-auto grid ${isPreview ? 'grid-cols-1 justify-items-center' : 'grid-cols-1 xl:grid-cols-[auto_minmax(300px,846px)_auto]'} gap-2 sm:gap-4 items-start`}>
           {/* Left Sidebar Ad */}
+          {!isPreview && (
           <div className="hidden xl:flex items-start justify-center sticky top-8">
             <AdSlot variant="vertical-cards" />
           </div>
+          )}
 
           {/* Main Quiz Card */}
           <div className="flex justify-center w-full">
@@ -358,7 +390,7 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
                         restartKey={imageRestartKey}
                       />
                     )
-                  ) : questionType === 'image-options' || quizData.type === 'image-options' ? (
+                  ) : questionType === 'image-options' || quizData.type === 'image-options' || normalizedQuestionType === 'image-options' ? (
                     <QuizTypeImageOptions
                       questions={quizData.questions}
                       onRestart={handleRestart}
@@ -370,19 +402,19 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
                       selectedAnswer={currentAnswer as string}
                       restartKey={imageRestartKey}
                     />
-                  ) : questionType === 'text-input' ? (
+                  ) : normalizedQuestionType === 'text-input' ? (
                     <QuizTypeTextInput
                       question={currentQuestion}
                       selectedAnswer={currentAnswer as string}
                       onAnswerSelect={(val: string) => handleAnswerSelect(val)}
                     />
-                  ) : questionType === 'figma-image' ? (
+                  ) : normalizedQuestionType === 'figma-image' ? (
                     <QuizTypeFigmaQuestion
                       question={currentQuestion}
                       selectedAnswer={currentAnswer as string}
                       onAnswerSelect={(val: string) => handleAnswerSelect(val)}
                     />
-                  ) : questionType === 'slider' ? (
+                  ) : normalizedQuestionType === 'slider' ? (
                     <QuizTypeSlider
                       question={currentQuestion}
                       selectedAnswer={currentAnswer as string}
@@ -418,16 +450,20 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData }) => {
           </div>
 
           {/* Right Sidebar Ad */}
+          {!isPreview && (
           <div className="hidden xl:flex items-start justify-center sticky top-8">
             <AdSlot variant="vertical-cards" />
           </div>
+          )}
         </div>
       </div>
 
-      <Footer />
+      {!isPreview && <Footer />}
+      {!isPreview && (
       <AdContainer heightClass="h-[266px]" widthClass="w-full max-w-none" className="rounded-tl-[4px] rounded-tr-[4px] m-0">
         <AdSlot slotId="YA_QHOME_FEED_003" />
       </AdContainer>
+      )}
     </div>
   );
 };

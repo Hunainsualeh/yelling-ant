@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 
 const categoryChips = [
   {
@@ -42,12 +42,7 @@ const categoryChips = [
     isActive: false,
     gradient: "linear-gradient(90deg, rgba(255,99,126,1) 0%, rgba(230,0,118,1) 100%)",
   },
-  {
-    label: "Personality",
-    icon: "https://c.animaapp.com/min29ubxIAQkvK/img/icon-9.svg",
-    isActive: false,
-    gradient: "linear-gradient(90deg, rgba(251,44,54,1) 0%, rgba(240,177,0,1) 100%)",
-  },
+
   {
     label: "Culture & History",
     icon: "https://c.animaapp.com/min29ubxIAQkvK/img/icon-8.svg",

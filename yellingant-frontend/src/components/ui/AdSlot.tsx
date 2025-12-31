@@ -47,14 +47,6 @@ const AdSlot = ({ slotId, className = '', variant = 'default' }: AdSlotProps) =>
     fetchAds();
   }, [slotId, variant]);
 
-  const trackImpression = async (adId: number) => {
-      try {
-          await request(`/api/ads/${adId}/impression`, { method: 'POST' });
-      } catch (e) {
-          // ignore
-      }
-  }
-
   const renderAdContent = (ad: Ad | undefined, placeholder: string) => {
       if (!ad) {
           return (

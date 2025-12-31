@@ -236,7 +236,7 @@ export const QuizResult: React.FC<QuizResultProps> = ({
 
       {/* Bottom Ad Container */}
       <AdContainer heightClass="h-[266px]" widthClass="w-full max-w-none" className="rounded-tl-[4px] rounded-tr-[4px] m-0">
-        <AdSlot slotId="YA_QHOME_FEED_003" />
+        <AdSlot slotId="YA_QHOME_FEED_003" className="w-full h-full" />
       </AdContainer>
     </div>
   );

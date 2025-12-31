@@ -1,6 +1,7 @@
 export interface QuizQuestion {
   id: number;
   question: string;
+  text?: string; // Alternative field name from admin panel
   image?: string;
   options?: QuizAnswer[];
   type:
@@ -17,8 +18,6 @@ export interface QuizQuestion {
     correct?: string;
     incorrect?: string;
   };
-  // For image-options type
-  text?: string;
   // For slider type
   sliderMin?: number;
   sliderMax?: number;
@@ -50,11 +49,14 @@ export interface QuizData {
   slug: string;
   title: string;
   description: string;
+  dek?: string; // Alternative field name from backend
   heroImage: string;
+  hero_image?: string; // Alternative field name from backend
   totalQuestions: number;
   questions: QuizQuestion[];
   results: QuizResult[];
-  type: 'personality' | 'trivia' | 'scored' | 'image-options' | 'figma-image';
+  type: 'personality' | 'trivia' | 'scored' | 'image-options' | 'figma-image' | 'points';
+  primary_colony?: string;
 }
 
 export interface QuizState {

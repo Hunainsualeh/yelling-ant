@@ -24,14 +24,14 @@ function App() {
       
       {/* First Feed Ad */}
         <AdContainer heightClass="h-[236px]" widthClass="w-[90%] mx-auto">
-        <AdSlot slotId="YA_QHOME_FEED_001" />
+        <AdSlot slotId="YA_QHOME_FEED_001" className="w-full h-full" />
       </AdContainer>
       
       <TrendingSection selectedCategory={selectedCategory} />
       
       {/* Second Feed Ad */}
         <AdContainer heightClass="h-[174px]" widthClass="w-[90%] mx-auto">
-        <AdSlot slotId="YA_QHOME_FEED_002" />
+        <AdSlot slotId="YA_QHOME_FEED_002" className="w-full h-full" />
       </AdContainer>
       
       <EditorsPicks />
@@ -42,7 +42,7 @@ function App() {
 
       {/* Third Feed Ad (after Footer) */}
       <AdContainer heightClass="h-[266px]" widthClass="w-[100%] mx-auto" className="rounded-tl-[4px] rounded-tr-[4px] m-0">
-        <AdSlot slotId="YA_QHOME_FEED_003" />
+        <AdSlot slotId="YA_QHOME_FEED_003" className="w-full h-full" />
       </AdContainer>
     </div>
   );

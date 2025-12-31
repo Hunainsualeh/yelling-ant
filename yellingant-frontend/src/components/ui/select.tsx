@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext, useRef, useEffect } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 const SelectContext = createContext<{

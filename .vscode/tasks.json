@@ -147,6 +147,37 @@
 			"command": "node list-ads.js",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Start Backend Server",
+			"type": "shell",
+			"command": "cd backend && npm run dev",
+			"isBackground": true,
+			"group": "test"
+		},
+		{
+			"label": "Start Backend Dev Server",
+			"type": "shell",
+			"command": "npx tsx src/index.ts",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Start Backend Server 2",
+			"type": "shell",
+			"command": "cd backend && npx tsx src/index.ts",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Start Backend Server 3",
+			"type": "shell",
+			"command": "cd backend; npx tsx src/index.ts",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { Input } from "../ui/input"
@@ -9,11 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Switch } from "../ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { Upload, Info } from "lucide-react"
-import { request } from "../../utils/api"
+import { createAd, updateAd } from "../../utils/api"
 import { useToast } from "../ui/toast"
 import { SuccessModal } from "../ui/SuccessModal"
+
+interface AdFormProps {
+  initialData?: any;
+  isEditing?: boolean;
+}
   
-export function AdForm() {
+export function AdForm({ initialData, isEditing = false }: AdFormProps) {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState("general")
@@ -31,6 +36,21 @@ export function AdForm() {
     heroImage: '',
     url: ''
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || '',
+        brand: initialData.brand || '',
+        description: initialData.content?.description || '',
+        slot: initialData.slot || '',
+        active: initialData.status === 'active',
+        headline: initialData.content?.headline || '',
+        heroImage: initialData.content?.url || '',
+        url: initialData.content?.link || ''
+      });
+    }
+  }, [initialData]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -58,17 +78,18 @@ export function AdForm() {
         }
       };
 
-      await request('/api/ads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      if (isEditing && initialData?.id) {
+        await updateAd(initialData.id, payload);
+        showToast('Ad updated successfully!', 'success');
+      } else {
+        await createAd(payload);
+        showToast('Ad created successfully!', 'success');
+      }
 
-      showToast('Ad created successfully!', 'success');
       setShowSuccessModal(true);
-    } catch (error) {
-      console.error('Failed to create ad:', error);
-      showToast('Failed to create ad. Please try again.', 'error');
+    } catch (error: any) {
+      console.error('Failed to save ad:', error);
+      showToast(error.message || 'Failed to save ad. Please try again.', 'error');
     } finally {
       setIsLoading(false)
     }
@@ -271,7 +292,7 @@ export function AdForm() {
               Previous
             </Button>
             <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading ? "Saving..." : "Create Campaign"}
+              {isLoading ? "Saving..." : (isEditing ? "Update Campaign" : "Create Campaign")}
             </Button>
           </CardFooter>
         </Card>
@@ -285,8 +306,8 @@ export function AdForm() {
         setShowSuccessModal(false);
         navigate("/admin/ads-management");
       }}
-      title="Ad Created Successfully!"
-      message={`Your ad "${formData.name}" has been created and is now ${formData.active ? 'active' : 'inactive'}.`}
+      title={isEditing ? "Ad Updated Successfully!" : "Ad Created Successfully!"}
+      message={`Your ad "${formData.name}" has been ${isEditing ? 'updated' : 'created'} and is now ${formData.active ? 'active' : 'inactive'}.`}
       actionLabel="Go to Ads Management"
     />
     </>

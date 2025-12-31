@@ -5,8 +5,22 @@ import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../components/ui/toast';
 
-type Option = { id: string; text: string; correct: boolean; image?: string };
-type Question = { id: number; text: string; type: string; points: number; options: Option[]; media?: string[] };
+type Option = { id: string; text: string; correct: boolean; image?: string; personalityType?: string };
+type Question = { 
+  id: number; 
+  text: string; 
+  type: string; 
+  points: number; 
+  options: Option[]; 
+  media?: string[];
+  // Slider specific
+  sliderMin?: number;
+  sliderMax?: number;
+  sliderMinLabel?: string;
+  sliderMaxLabel?: string;
+  // Text input specific
+  correctAnswer?: string;
+};
 
 const CreateQuiz: React.FC = () => {
   const navigate = useNavigate();
@@ -122,30 +136,7 @@ const CreateQuiz: React.FC = () => {
   const saveDraft = async () => {
     setIsSaving(true);
     try {
-      // assemble payload to satisfy backend validation (requires `type`, `dek`, `results`, and string ids)
-      const quizPayload: any = {
-        title: quizDetails.title,
-        dek: quizDetails.description || '',
-        type: 'points',
-        questions: questions.map((qq) => ({
-          id: String(qq.id),
-          text: qq.text || '',
-          options: (qq.options && qq.options.length)
-            ? qq.options.map((oo) => ({ id: String(oo.id), text: oo.text || '', points: (oo as any).points || 0, correct: !!(oo as any).correct }))
-            : [
-                { id: 'opt1', text: 'Option 1', points: 1 },
-                { id: 'opt2', text: 'Option 2', points: 0 },
-              ],
-        })),
-        // minimal default results so server validation passes
-        results: {
-          r1: { id: 'r1', title: 'Result 1', description: '' },
-        },
-      };
-
-      // Note: backend validation currently disallows image/media fields on questions/options.
-      // Upload files for storage, but do NOT attach `media` or `image` properties to the quiz payload.
-      // Keep a local map of uploaded assets in case admin wants to associate them later.
+      // Upload files first to get URLs
       const uploadedAssets: Record<string, string[]> = {};
       for (const q of questions) {
         const qKey = `q_${q.id}`;
@@ -157,7 +148,7 @@ const CreateQuiz: React.FC = () => {
           uploadedAssets[qKey] = urls;
         }
 
-        // handle option images per option but don't add to payload
+        // handle option images
         for (const opt of q.options) {
           const optKey = `opt_${q.id}_${opt.id}`;
           const optFiles = mediaFiles[optKey];
@@ -171,6 +162,76 @@ const CreateQuiz: React.FC = () => {
           }
         }
       }
+
+      // Determine overall quiz type based on first question or majority
+      const questionTypes = questions.map(q => q.type);
+      const determineQuizType = () => {
+        if (questionTypes.includes('personality')) return 'personality';
+        if (questionTypes.includes('image-options') || questionTypes.includes('image-choice')) return 'image-options';
+        if (questionTypes.includes('figma-image')) return 'figma-image';
+        if (questionTypes.includes('slider')) return 'scored';
+        return 'trivia';
+      };
+
+      // Assemble payload with proper question types and images
+      const quizPayload: any = {
+        title: quizDetails.title,
+        slug: (quizDetails.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        description: quizDetails.description || '',
+        dek: quizDetails.description || '',
+        type: determineQuizType(),
+        primary_colony: quizDetails.category || 'General',
+        heroImage: '', // Can be set in quiz details
+        totalQuestions: questions.length,
+        questions: questions.map((qq, idx) => {
+          const qKey = `q_${qq.id}`;
+          // Get question image from uploaded assets or existing media
+          const questionImage = uploadedAssets[qKey]?.[0] || (qq.media && qq.media[0]) || '';
+          
+          return {
+            id: idx + 1, // Use numeric id for QuizData compatibility
+            question: qq.text || '', // Use 'question' field for QuizContainer compatibility
+            text: qq.text || '',
+            type: qq.type || 'single', // Include the question type
+            image: questionImage,
+            options: (qq.options && qq.options.length)
+              ? qq.options.map((oo) => {
+                  const optKey = `opt_${qq.id}_${oo.id}`;
+                  const optionImage = uploadedAssets[optKey]?.[0] || oo.image || '';
+                  return {
+                    id: String(oo.id),
+                    text: oo.text || '',
+                    label: oo.text || '', // Add label for image options
+                    image: optionImage,
+                    points: (oo as any).points || 0,
+                    correct: !!(oo as any).correct,
+                    // For personality quizzes
+                    personalityType: (oo as any).personalityType || '',
+                  };
+                })
+              : [
+                  { id: 'opt1', text: 'Option 1', label: 'Option 1', points: 1 },
+                  { id: 'opt2', text: 'Option 2', label: 'Option 2', points: 0 },
+                ],
+            // For text-input type questions
+            correctAnswer: qq.correctAnswer || qq.options?.find(o => o.correct)?.text || '',
+            // For slider type questions
+            sliderMin: qq.sliderMin,
+            sliderMax: qq.sliderMax,
+            sliderMinLabel: qq.sliderMinLabel,
+            sliderMaxLabel: qq.sliderMaxLabel,
+          };
+        }),
+        // Results should be an ARRAY for QuizContainer compatibility
+        results: [
+          { id: 'r1', type: 'default', title: 'Great Job!', description: 'You completed the quiz.', image: '' },
+          { id: 'r2', type: 'excellent', title: 'Excellent!', description: 'Outstanding performance!', image: '' },
+          { id: 'r3', type: 'good', title: 'Good Work!', description: 'Nice effort!', image: '' },
+        ],
+      };
+
+      // Debug: Log the payload being sent to the API
+      console.log('CreateQuiz saveDraft - quizPayload being sent:', JSON.stringify(quizPayload, null, 2));
 
       // prefer update (PUT) to avoid creating duplicate slug entries
       const token = localStorage.getItem('admin_token') || undefined;
@@ -187,7 +248,9 @@ const CreateQuiz: React.FC = () => {
           if (res) setCreatedSlug(slugCandidate);
         } catch (err: any) {
           // If update failed because quiz not found (404), fall back to creating a new quiz
-          if (err.message && err.message.includes('404')) {
+          // api.ts throws the error message from backend, which might be "Quiz not found" without "404"
+          if (err.message && (err.message.includes('404') || err.message.toLowerCase().includes('not found'))) {
+            console.log('Quiz not found, creating new one...');
             res = await api.createQuiz(quizPayload, token);
             const slug = res?.quiz?.slug || res?.slug || null;
             if (slug) setCreatedSlug(slug);
@@ -440,18 +503,91 @@ const CreateQuiz: React.FC = () => {
                 onChange={(e) => changeQuestionType(currentQuestion.id, e.target.value)}
                 className="w-full px-4 py-3 bg-[#F9FAFB] font-helvetica font-normal text-[#2B2B2B] border border-gray-200 rounded-[8px] text-[14px]"
               >
-                <option value="image-options">Text + Image Answers (image-options)</option>
-                <option value="image-choice">Image Choice (image-choice)</option>
-                <option value="single">Single Choice (single)</option>
-                <option value="multiple">Multiple Choice (multiple)</option>
-                <option value="personality">Personality (personality)</option>
-                <option value="text-input">Text Only (text-input)</option>
-                <option value="slider">Slider (slider)</option>
-                <option value="figma-image">Figma Image (figma-image)</option>
+                <option value="image-options">🖼️ This or That (Two Image Choices)</option>
+                <option value="image-choice">🎨 Image Grid (4 Image Options)</option>
+                <option value="single">📝 Single Choice (Text Options)</option>
+                <option value="multiple">☑️ Multiple Choice (Select Many)</option>
+                <option value="personality">🧠 Personality Quiz (Personality Mapping)</option>
+                <option value="text-input">✍️ Text Input (Type Answer)</option>
+                <option value="slider">📊 Slider Scale (1-10 Rating)</option>
+                <option value="figma-image">📸 Full Image Question (Image + Text Options)</option>
               </select>
+              <p className="text-[12px] text-[#696F79] mt-2">
+                {currentQuestion.type === 'image-options' && '📌 Best for "This or That" style quizzes with two image choices'}
+                {currentQuestion.type === 'image-choice' && '📌 Best for personality quizzes with 4 visual options like "Order a Feast"'}
+                {currentQuestion.type === 'single' && '📌 Classic quiz format with text-only answer choices'}
+                {currentQuestion.type === 'multiple' && '📌 Allow users to select multiple correct answers'}
+                {currentQuestion.type === 'personality' && '📌 Each answer maps to a personality type result'}
+                {currentQuestion.type === 'text-input' && '📌 Users type their answer (e.g., guess the quote)'}
+                {currentQuestion.type === 'slider' && '📌 Users rate on a sliding scale (opinion-based)'}
+                {currentQuestion.type === 'figma-image' && '📌 Large image with simple text options below'}
+              </p>
             </div>
 
-            {currentQuestion.type.toLowerCase().includes('image') && (
+            {/* Slider Type - Special UI */}
+            {currentQuestion.type === 'slider' && (
+              <div className="mb-6 p-4 bg-[#F9FAFB] rounded-[12px] border border-gray-200">
+                <h4 className="text-[14px] font-helvetica font-semibold text-[#2B2B2B] mb-4">Slider Settings</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[13px] text-[#696F79] mb-1">Min Value</label>
+                    <input
+                      type="number"
+                      value={(currentQuestion as any).sliderMin || 0}
+                      onChange={(e) => updateQuestion(currentQuestion.id, { sliderMin: Number(e.target.value) } as any)}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] text-[#696F79] mb-1">Max Value</label>
+                    <input
+                      type="number"
+                      value={(currentQuestion as any).sliderMax || 10}
+                      onChange={(e) => updateQuestion(currentQuestion.id, { sliderMax: Number(e.target.value) } as any)}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] text-[#696F79] mb-1">Min Label (e.g., "Hate it")</label>
+                    <input
+                      type="text"
+                      value={(currentQuestion as any).sliderMinLabel || ''}
+                      onChange={(e) => updateQuestion(currentQuestion.id, { sliderMinLabel: e.target.value } as any)}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px]"
+                      placeholder="Not at all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] text-[#696F79] mb-1">Max Label (e.g., "Love it")</label>
+                    <input
+                      type="text"
+                      value={(currentQuestion as any).sliderMaxLabel || ''}
+                      onChange={(e) => updateQuestion(currentQuestion.id, { sliderMaxLabel: e.target.value } as any)}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px]"
+                      placeholder="Absolutely!"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Text Input Type - Special UI */}
+            {currentQuestion.type === 'text-input' && (
+              <div className="mb-6 p-4 bg-[#F9FAFB] rounded-[12px] border border-gray-200">
+                <h4 className="text-[14px] font-helvetica font-semibold text-[#2B2B2B] mb-4">Correct Answer</h4>
+                <p className="text-[12px] text-[#696F79] mb-2">Enter the correct answer (case-insensitive matching)</p>
+                <input
+                  type="text"
+                  value={(currentQuestion as any).correctAnswer || ''}
+                  onChange={(e) => updateQuestion(currentQuestion.id, { correctAnswer: e.target.value } as any)}
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[8px] text-[14px]"
+                  placeholder="Type the correct answer"
+                />
+              </div>
+            )}
+
+            {/* Image Upload - Only for image-based types */}
+            {(currentQuestion.type === 'image-options' || currentQuestion.type === 'image-choice' || currentQuestion.type === 'figma-image') && (
               <div className="mb-6">
                 <label className="block text-[16px] font-helvetica font-bold text-[#2B2B2B] mb-3">Media Upload</label>
                 <p className='font-helvetica text-[14px] text-[#696F79] mb-3'>Add your documents here, and you can upload up to 5 files max</p>
@@ -556,60 +692,135 @@ const CreateQuiz: React.FC = () => {
               </div>
             )}
 
+            {/* Answer Options - Only for types that need options (not slider or text-input) */}
+            {currentQuestion.type !== 'slider' && currentQuestion.type !== 'text-input' && (
             <div>
-              <label className="block text-[14px] font-helvetica font-medium text-[#2B2B2B] mb-3">Answer Options</label>
+              <label className="block text-[14px] font-helvetica font-medium text-[#2B2B2B] mb-3">
+                {currentQuestion.type === 'personality' ? 'Answer Options (with Personality Mapping)' : 'Answer Options'}
+              </label>
+              
+              {/* Quick setup for This/That */}
+              {currentQuestion.type === 'image-options' && currentQuestion.options.length === 0 && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-[8px] border border-blue-200">
+                  <p className="text-[13px] text-blue-700 mb-2">💡 Quick Setup: This is a "This or That" question type</p>
+                  <button
+                    onClick={() => {
+                      setQuestions((prev) => prev.map((qq) => 
+                        qq.id === currentQuestion.id 
+                          ? { ...qq, options: [
+                              { id: 'this', text: 'This', correct: false, image: '' },
+                              { id: 'that', text: 'That', correct: false, image: '' }
+                            ]} 
+                          : qq
+                      ));
+                    }}
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-[6px] text-[13px] font-medium"
+                  >
+                    Add "This" and "That" Options
+                  </button>
+                </div>
+              )}
+
+              {/* Quick setup for Image Grid (4 options) */}
+              {currentQuestion.type === 'image-choice' && currentQuestion.options.length === 0 && (
+                <div className="mb-4 p-3 bg-purple-50 rounded-[8px] border border-purple-200">
+                  <p className="text-[13px] text-purple-700 mb-2">💡 Quick Setup: This is a 4-image grid question</p>
+                  <button
+                    onClick={() => {
+                      setQuestions((prev) => prev.map((qq) => 
+                        qq.id === currentQuestion.id 
+                          ? { ...qq, options: [
+                              { id: 'opt1', text: 'Option 1', correct: false, image: '' },
+                              { id: 'opt2', text: 'Option 2', correct: false, image: '' },
+                              { id: 'opt3', text: 'Option 3', correct: false, image: '' },
+                              { id: 'opt4', text: 'Option 4', correct: false, image: '' }
+                            ]} 
+                          : qq
+                      ));
+                    }}
+                    className="px-3 py-1.5 bg-purple-600 text-white rounded-[6px] text-[13px] font-medium"
+                  >
+                    Add 4 Image Options
+                  </button>
+                </div>
+              )}
+
               <div className="space-y-3">
                 {currentQuestion.options.map((opt) => (
                   <div
                     key={opt.id}
                     className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-[#F9FAFB] rounded-[8px] border border-gray-200"
                   >
-                    <input
-                      type="radio"
-                      name={`q-${currentQuestion.id}`}
-                      checked={opt.correct}
-                      onChange={() => toggleCorrect(currentQuestion.id, opt.id)}
-                      className="w-5 h-5 text-[#2B2B2B] focus:ring-[#7C3AED] flex-shrink-0"
-                    />
+                    {/* Correct answer radio - only show for trivia types */}
+                    {(currentQuestion.type === 'single' || currentQuestion.type === 'multiple' || currentQuestion.type === 'figma-image') && (
+                      <input
+                        type={currentQuestion.type === 'multiple' ? 'checkbox' : 'radio'}
+                        name={`q-${currentQuestion.id}`}
+                        checked={opt.correct}
+                        onChange={() => toggleCorrect(currentQuestion.id, opt.id)}
+                        className="w-5 h-5 text-[#2B2B2B] focus:ring-[#7C3AED] flex-shrink-0"
+                      />
+                    )}
 
                     <div className="flex items-center gap-3 flex-1">
-                      {opt.image && (
-                        <div className="relative w-16 h-16 flex-shrink-0">
-                          <img src={opt.image} className="w-full h-full object-cover rounded-[6px]" alt="opt" />
-                          <button
-                            onClick={() => handleOptionImage(currentQuestion.id, opt.id, undefined)}
-                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
-                          >
-                            ×
-                          </button>
-                          <div className="mt-2">
-                            <input
-                              type="text"
-                              placeholder="Alt text (optional)"
-                              value={(mediaAltTexts[`opt_${currentQuestion.id}_${opt.id}`] && mediaAltTexts[`opt_${currentQuestion.id}_${opt.id}`][0]) || ''}
-                              onChange={(e) => {
-                                const key = `opt_${currentQuestion.id}_${opt.id}`;
-                                setMediaAltTexts((prev) => ({ ...prev, [key]: [e.target.value] }));
-                              }}
-                              className="w-full mt-1 px-2 py-1 text-sm border border-gray-200 rounded-[6px]"
-                            />
-                          </div>
+                      {/* Image preview for image-based options */}
+                      {(currentQuestion.type === 'image-options' || currentQuestion.type === 'image-choice') && (
+                        <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 rounded-[6px] border border-dashed border-gray-300 flex items-center justify-center">
+                          {opt.image ? (
+                            <>
+                              <img src={opt.image} className="w-full h-full object-cover rounded-[6px]" alt="opt" />
+                              <button
+                                onClick={() => handleOptionImage(currentQuestion.id, opt.id, undefined)}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
+                              >
+                                ×
+                              </button>
+                            </>
+                          ) : (
+                            <label htmlFor={`optfile-${currentQuestion.id}-${opt.id}`} className="cursor-pointer text-center p-1">
+                              <svg className="w-6 h-6 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                              </svg>
+                              <span className="text-[10px] text-gray-400">Add Image</span>
+                            </label>
+                          )}
                         </div>
                       )}
-                      <input
-                        value={opt.text}
-                        onChange={(e) =>
-                          setQuestions((prev) =>
-                            prev.map((qq) =>
-                              qq.id === currentQuestion.id
-                                ? { ...qq, options: qq.options.map((oo) => (oo.id === opt.id ? { ...oo, text: e.target.value } : oo)) }
-                                : qq
+                      
+                      <div className="flex-1 flex flex-col gap-2">
+                        <input
+                          value={opt.text}
+                          onChange={(e) =>
+                            setQuestions((prev) =>
+                              prev.map((qq) =>
+                                qq.id === currentQuestion.id
+                                  ? { ...qq, options: qq.options.map((oo) => (oo.id === opt.id ? { ...oo, text: e.target.value } : oo)) }
+                                  : qq
+                              )
                             )
-                          )
-                        }
-                        className="flex-1 bg-transparent text-[14px] text-gray-900 outline-none"
-                        placeholder="Enter option text"
-                      />
+                          }
+                          className="flex-1 bg-transparent text-[14px] text-gray-900 outline-none border-b border-transparent hover:border-gray-200 focus:border-[#C85103] pb-1"
+                          placeholder={currentQuestion.type === 'image-options' ? (opt.id === 'this' ? 'This' : 'That') : 'Enter option text'}
+                        />
+                        
+                        {/* Personality Type mapping - only for personality questions */}
+                        {currentQuestion.type === 'personality' && (
+                          <input
+                            value={opt.personalityType || ''}
+                            onChange={(e) =>
+                              setQuestions((prev) =>
+                                prev.map((qq) =>
+                                  qq.id === currentQuestion.id
+                                    ? { ...qq, options: qq.options.map((oo) => (oo.id === opt.id ? { ...oo, personalityType: e.target.value } : oo)) }
+                                    : qq
+                                )
+                              )
+                            }
+                            className="text-[12px] text-purple-600 bg-purple-50 px-2 py-1 rounded-[4px] outline-none border border-purple-200"
+                            placeholder="Personality type (e.g., introvert, leader)"
+                          />
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-3 ml-auto">
@@ -619,12 +830,14 @@ const CreateQuiz: React.FC = () => {
                         id={`optfile-${currentQuestion.id}-${opt.id}`}
                         onChange={(e) => handleOptionImage(currentQuestion.id, opt.id, e.target.files ? e.target.files[0] : undefined)}
                       />
-                      <label
-                        htmlFor={`optfile-${currentQuestion.id}-${opt.id}`}
-                        className="text-[13px] text-[#C85103] cursor-pointer hover:underline font-medium"
-                      >
-                        {opt.image ? 'Change' : 'Upload'}
-                      </label>
+                      {(currentQuestion.type === 'image-options' || currentQuestion.type === 'image-choice') && opt.image && (
+                        <label
+                          htmlFor={`optfile-${currentQuestion.id}-${opt.id}`}
+                          className="text-[13px] text-[#C85103] cursor-pointer hover:underline font-medium"
+                        >
+                          Change
+                        </label>
+                      )}
                       <button
                         onClick={() => removeOption(currentQuestion.id, opt.id)}
                         className="text-[13px] text-gray-500 hover:text-red-600 font-medium"
@@ -638,11 +851,12 @@ const CreateQuiz: React.FC = () => {
 
               <button
                 onClick={() => addOption(currentQuestion.id)}
-                className="mt-4 w-full py-3 border-gray-300 rounded-[8px] text-[14px] text-gray-600 font-medium"
+                className="mt-4 w-full py-3 border border-dashed border-gray-300 rounded-[8px] text-[14px] text-gray-600 font-medium hover:bg-gray-50 transition-colors"
               >
                 + Add Option
               </button>
             </div>
+            )}
           </div>
 
           <div className="pt-4">
@@ -718,7 +932,7 @@ const CreateQuiz: React.FC = () => {
                     onClick={publish}
                     className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-[#C85103] text-white rounded-[8px] text-[14px] font-medium hover:bg-[#B34803] transition-colors"
                   >
-                    Preview
+                    Save & Preview
                   </button>
                 </div>
               </div>
