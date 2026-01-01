@@ -200,12 +200,12 @@ const AdSlot = ({ slotId, className = '', variant = 'default', position }: AdSlo
     );
   }
   
-  // Quiz Banner variant - 798px x 147px
+  // Quiz Banner variant - 798px x 147px (responsive height on mobile)
   if (variant === 'quiz-banner' || slotId === 'quiz-main') {
     const ad = ads[0];
     return (
       <div 
-        className={`w-full max-w-[798px] h-[147px] mx-auto rounded-t-[4px] border border-[#B3B6B6] bg-white overflow-hidden relative ${className}`}
+        className={`w-full max-w-[798px] h-[100px] sm:h-[147px] mx-auto rounded-t-[4px] border border-[#B3B6B6] bg-white overflow-hidden relative ${className}`}
         data-ad-slot={slotId || 'quiz-main'}
       >
         {renderAdContent(ad, 'Quiz Ad')}

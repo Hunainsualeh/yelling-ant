@@ -35,8 +35,8 @@ const QuizTypeTextInput: React.FC<Props> = ({ question, selectedAnswer, onAnswer
           <div className="absolute inset-0 bg-black/30" />
 
           {/* Overlayed question text (centered for stability) */}
-          <div className="absolute inset-x-0 top-4 flex items-center justify-center">
-            <div className="text-white text-[24px] leading-[30px] font-bold tracking-tight text-center">
+          <div className="absolute inset-x-0 top-4 flex items-center justify-center px-3">
+            <div className="text-white text-[18px] sm:text-[24px] leading-[24px] sm:leading-[30px] font-bold tracking-tight text-center">
               {question.question}
             </div>
           </div>
@@ -44,7 +44,7 @@ const QuizTypeTextInput: React.FC<Props> = ({ question, selectedAnswer, onAnswer
       )}
 
       {/* Input */}
-      <div>
+      <div className="px-1">
         <input
           type="text"
           value={value}
@@ -64,7 +64,7 @@ const QuizTypeTextInput: React.FC<Props> = ({ question, selectedAnswer, onAnswer
             }
           }}
           placeholder="Your Answer"
-          className="w-full h-[44px] sm:h-[50px] px-4 py-3 rounded-[12px] border border-[#E5E7EB] text-gray-700 focus:outline-none"
+          className="w-full h-[42px] sm:h-[50px] px-3 sm:px-4 py-2 sm:py-3 rounded-[12px] border border-[#E5E7EB] text-gray-700 text-sm sm:text-base focus:outline-none"
         />
 
         

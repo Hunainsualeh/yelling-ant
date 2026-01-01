@@ -299,11 +299,11 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, is
                 
                 {/* Bottom Action Buttons */}
                 {quizData.type !== 'image-options' && (
-                  <div className="flex flex-col sm:flex-row gap-3 w-full">
-                    <div className="flex-1">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full items-center justify-center">
+                    <div className="w-full sm:w-auto sm:flex-1 sm:max-w-[250px]">
                       <JoinYellingAntButton onClick={() => window.open('https://yellingant.com', '_blank')} />
                     </div>
-                    <div className="flex-1">
+                    <div className="w-full sm:w-auto sm:flex-1 sm:max-w-[395px]">
                       <NextButton onClick={handleNext} disabled={!currentAnswer} />
                     </div>
                   </div>
@@ -439,11 +439,11 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, is
                 </div>
 
                 {/* Bottom Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 w-full">
-                  <div className="flex-1">
+                <div className="flex flex-col sm:flex-row gap-3 w-full items-center justify-center">
+                  <div className="w-full sm:w-auto sm:flex-1 sm:max-w-[250px]">
                     <JoinYellingAntButton onClick={() => window.open('https://yellingant.com', '_blank')} />
                   </div>
-                  <div className="flex-1">
+                  <div className="w-full sm:w-auto sm:flex-1 sm:max-w-[395px]">
                     <NextButton onClick={handleNext} disabled={!currentAnswer} />
                   </div>
                 </div>

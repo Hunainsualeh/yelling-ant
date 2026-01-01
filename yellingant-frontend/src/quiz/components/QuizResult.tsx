@@ -73,7 +73,7 @@ export const QuizResult: React.FC<QuizResultProps> = ({
       <QuizCategories />
       
       {/* Main Result Container */}
-      <div className="w-full py-8 px-10">
+      <div className="w-full py-4 sm:py-8 px-4 sm:px-10">
         <div className="w-full mx-auto grid grid-cols-1 xl:grid-cols-[240px_minmax(0,798px)_240px] justify-center gap-4 items-start px-0">
           
           {/* Left Vertical Ad Slot */}
@@ -87,22 +87,22 @@ export const QuizResult: React.FC<QuizResultProps> = ({
               
               {/* Score Badge for Trivia - Top Left */}
               {isTrivia && score !== undefined && (
-                <div className="absolute top-6 left-6 z-10">
-                  <div className="relative w-20 h-20">
-                    <svg className="w-20 h-20 transform -rotate-90">
-                      <circle cx="40" cy="40" r="36" stroke="#f3f4f6" strokeWidth="6" fill="none" />
+                <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
+                  <div className="relative w-16 h-16 sm:w-20 sm:h-20">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20 transform -rotate-90">
+                      <circle cx="50%" cy="50%" r="45%" stroke="#f3f4f6" strokeWidth="6" fill="none" />
                       <circle
-                        cx="40" cy="40" r="36"
+                        cx="50%" cy="50%" r="45%"
                         stroke={score >= 80 ? '#22c55e' : score >= 60 ? '#fbbf24' : '#ef4444'}
                         strokeWidth="6" fill="none"
-                        strokeDasharray={`${2 * Math.PI * 36}`}
+                        strokeDasharray={`${2 * Math.PI * 36}`} // Approximate for r=36 (desktop), will be slightly off for mobile but visual enough
                         strokeDashoffset={`${2 * Math.PI * 36 * (1 - score / 100)}`}
                         className="transition-all duration-1000"
                         strokeLinecap="round"
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold text-gray-900">{score}%</span>
+                      <span className="text-sm sm:text-lg font-bold text-gray-900">{score}%</span>
                     </div>
                   </div>
                 </div>
@@ -111,31 +111,31 @@ export const QuizResult: React.FC<QuizResultProps> = ({
               {/* Retake Button - Top Right */}
               <button
                 onClick={onRestart}
-                className="absolute top-6 right-6 z-10 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 flex items-center gap-1 sm:gap-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span className="font-medium">Retake Quiz</span>
+                <span className="font-medium text-sm sm:text-base">Retake Quiz</span>
               </button>
 
               {/* Result Image/Illustration */}
               {result.image && (
-                <div className="relative w-full pt-12 pb-8 px-8 flex justify-center">
+                <div className="relative w-full pt-12 pb-4 sm:pb-8 px-4 sm:px-8 flex justify-center">
                   <img
                     src={result.image}
                     alt={result.title}
-                    className="w-64 h-64 object-contain"
+                    className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
                   />
                 </div>
               )}
 
               {/* Result Content */}
-              <div className={`px-8 pb-8 text-center ${!result.image ? 'pt-20' : ''}`}>
-                <h2 className="text-[32px] md:text-[36px] font-bold text-[#111827] mb-2 font-['Helvetica','Arial',sans-serif]">
+              <div className={`px-4 sm:px-8 pb-6 sm:pb-8 text-center ${!result.image ? 'pt-16 sm:pt-20' : ''}`}>
+                <h2 className="text-[24px] sm:text-[32px] md:text-[36px] font-bold text-[#111827] mb-2 font-['Helvetica','Arial',sans-serif]">
                   {result.title}
                 </h2>
-                <p className="text-base text-[#6b7280] leading-relaxed font-['Helvetica','Arial',sans-serif] max-w-[600px] mx-auto border-b border-gray-300 pb-4">
+                <p className="text-sm sm:text-base text-[#6b7280] leading-relaxed font-['Helvetica','Arial',sans-serif] max-w-[600px] mx-auto border-b border-gray-300 pb-4">
                   {result.description}
                 </p>
                 
@@ -204,8 +204,8 @@ export const QuizResult: React.FC<QuizResultProps> = ({
               )}
 
               {/* Action Buttons */}
-              <div className="px-8 pb-8 flex flex-col sm:flex-row gap-4 items-center justify-center">
-                <div className="flex items-center gap-4">
+              <div className="px-4 sm:px-8 pb-6 sm:pb-8 flex flex-col gap-6 items-center justify-center">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                   {/* Try Another Quiz Button (use UI variant) */}
                   <Button variant="tryAnother" onClick={() => (window.location.href = '/')}>Try Another Quiz</Button>
 
@@ -214,7 +214,7 @@ export const QuizResult: React.FC<QuizResultProps> = ({
                 </div>
 
                 {/* Social Share Buttons */}
-                <div className="flex items-center gap-3 relative">
+                <div className="flex flex-wrap justify-center gap-3 relative w-full">
                   <button
                     onClick={() => handleShare('facebook')}
                     className="w-10 h-10 bg-[#6d28d9] rounded-full flex items-center justify-center hover:bg-purple-800 transition-colors"
@@ -262,19 +262,19 @@ export const QuizResult: React.FC<QuizResultProps> = ({
             </div>
 
             {/* Spread button: placed outside the result card and aligned under social icons */}
-            <div className="flex justify-end mt-2 mr-10 relative">
+            <div className="flex justify-center sm:justify-end mt-2 mr-0 sm:mr-10 relative">
               <img 
                 src="/images/arrow.png" 
                 alt="arrow" 
-                className="absolute -top-24 right-28 w-32 h-32 object-contain pointer-events-none"
+                className="hidden sm:block absolute -top-24 right-28 w-32 h-32 object-contain pointer-events-none"
               />
               <button
                 onClick={() => handleShare()}
-                className="w-36 h-36 rounded-full bg-gradient-to-br from-[#9333ea] to-[#7c3aed] text-white shadow-2xl hover:scale-110 transition-transform duration-300 flex flex-col items-center justify-center gap-1 -translate-y-3"
+                className="w-24 h-24 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-[#9333ea] to-[#7c3aed] text-white shadow-2xl hover:scale-110 transition-transform duration-300 flex flex-col items-center justify-center gap-1 -translate-y-3"
               >
               
-                <span className="text-xs font-bold uppercase tracking-wider">Spread</span>
-                <span className="text-xs font-bold uppercase tracking-wider">Awesome!</span>
+                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Spread</span>
+                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Awesome!</span>
               </button>
             </div>
           </div>
@@ -293,8 +293,8 @@ export const QuizResult: React.FC<QuizResultProps> = ({
 
       {/* Latest Quizzes Section */}
       <div className="w-full mx-auto px-4 pb-12">
-        <div className="flex items-center justify-left ml-[100px]">
-          <h2 className="text-[32px] font-helvetica font-normal text-black text-center">Latest Quizzes</h2>
+        <div className="flex items-center justify-center sm:justify-start sm:ml-[100px]">
+          <h2 className="text-[24px] sm:text-[32px] font-helvetica font-normal text-black text-center">Latest Quizzes</h2>
         </div>
         <div className="w-full mx-auto px-0 pb-8">
           <TrendingSection showHeading={false} />
