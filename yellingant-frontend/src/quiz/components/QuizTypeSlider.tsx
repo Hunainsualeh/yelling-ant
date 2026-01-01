@@ -61,16 +61,18 @@ const QuizTypeSlider: React.FC<Props> = ({ question, selectedAnswer, onAnswerSel
         )}
 
         {/* Slider Container */}
-        <div className="w-full px-2 sm:px-4">
-          {/* Current Value Display */}
-          <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-r from-[#FE9A00] to-[#F54900] text-white font-bold text-2xl sm:text-3xl px-6 py-2 rounded-full min-w-[60px] text-center">
+        <div className="w-full px-4 sm:px-6 overflow-hidden">
+          {/* Labels Row with integrated value badge */}
+          <div className="flex justify-between items-center text-gray-500 text-sm sm:text-base font-medium mb-4">
+            <span className="flex-shrink-0">{question.sliderMinLabel ?? min}</span>
+            <div className="bg-gradient-to-r from-[#FE9A00] to-[#F54900] text-white font-bold text-lg sm:text-xl px-4 py-1 rounded-full">
               {value}
             </div>
+            <span className="flex-shrink-0">{question.sliderMaxLabel ?? max}</span>
           </div>
 
           {/* Slider Track */}
-          <div className="relative w-full h-3 sm:h-4 mb-4">
+          <div className="relative w-full h-3 sm:h-4 mb-2">
             {/* Background track */}
             <div className="absolute w-full h-full bg-[#EFDCFF] rounded-full opacity-40" />
             {/* Active track */}
@@ -91,14 +93,8 @@ const QuizTypeSlider: React.FC<Props> = ({ question, selectedAnswer, onAnswerSel
             {/* Custom thumb */}
             <div 
               className="absolute top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-full border-2 border-[#FE9A00] shadow-lg pointer-events-none transition-all duration-150"
-              style={{ left: `calc(${percentage}% - ${percentage > 50 ? '12px' : '8px'})` }}
+              style={{ left: `clamp(0px, calc(${percentage}% - 10px), calc(100% - 20px))` }}
             />
-          </div>
-
-          {/* Min/Max Labels */}
-          <div className="flex justify-between text-gray-500 text-sm sm:text-base font-medium">
-            <span>{question.sliderMinLabel ?? min}</span>
-            <span>{question.sliderMaxLabel ?? max}</span>
           </div>
         </div>
       </div>

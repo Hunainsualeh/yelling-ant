@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import type { QuizQuestion as QuizQuestionType } from "../types";
 import type { QuizResult as QuizResultType } from '../types';
-import WrongAnswerNotice from "../../components/ui/WrongAnswerNotice";
-import CorrectAnswerNotice from "../../components/ui/CorrectAnswerNotice";
 import { QuizResult } from './QuizResult';
 
 type QuizTypeImageOptionsProps = {
@@ -136,21 +134,11 @@ export default function QuizTypeImageOptions({ questions, onRestart, results: _r
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-2 w-full max-w-[900px] mx-auto px-2">
           {(currentQuestion.options ?? []).map((opt) => {
             const isSelected = selected === opt.id;
-            const isCorrect = Boolean(opt.correct);
             const showFeedback = selected !== null;
             let borderColor = "border-gray-200";
-            let icon = null;
 
-            if (showFeedback && isSelected && isCorrect) {
-              borderColor = "border-green-500";
-              icon = (
-                <span className="absolute top-2 right-2 text-green-500 text-2xl font-bold">✔</span>
-              );
-            } else if (showFeedback && isSelected && !isCorrect) {
-              borderColor = "border-red-500";
-              icon = (
-                <span className="absolute top-2 right-2 text-red-500 text-2xl font-bold">✖</span>
-              );
+            if (isSelected) {
+              borderColor = "border-[#9333ea] bg-[#f3e8ff]";
             }
 
             return (
@@ -160,30 +148,35 @@ export default function QuizTypeImageOptions({ questions, onRestart, results: _r
                 className={`relative flex flex-col items-center w-full max-w-[379px] aspect-square bg-white rounded-[12px] border-2 ${borderColor} shadow-sm cursor-pointer transition-transform duration-200 ${showFeedback && !isSelected ? 'opacity-60' : 'opacity-100'} ${showFeedback ? 'pointer-events-none' : 'pointer-events-auto'}`}
                 style={{ minWidth: '160px', minHeight: '160px' }}
               >
+                {/* Selection Badge - Check or X */}
+                {showFeedback && (
+                  <div className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full flex items-center justify-center ${isSelected ? 'bg-green-500' : 'bg-red-500'}`}>
+                    {isSelected ? (
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
+                  </div>
+                )}
                 <div className="w-full text-center px-4 py-4 bg-[#F9FAFB] ">
                   <span className="font-helvetica text-[24px] font-bold text-[#461799]">{opt.label ?? opt.text}</span>
                 </div>
                 <div className="w-full flex-1 overflow-hidden rounded-b-[12px]">
                   <img src={opt.image} alt={opt.label ?? opt.text ?? 'option'} className="w-full h-full object-cover" />
                 </div>
-                {icon}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Wrong Answer Container */}
+      {/* Wrong Answer Container - Removed for no correct/wrong feedback */}
       <div className="w-full mt-4">
-        {selected ? (
-          currentQuestion.options?.find(opt => opt && opt.id === selected)?.correct ? (
-            <CorrectAnswerNotice message={currentQuestion.feedback?.correct ?? currentQuestion.options?.find(opt => opt && opt.id === selected)?.label ?? currentQuestion.options?.find(opt => opt && opt.id === selected)?.text ?? 'Correct!'} />
-          ) : (
-            <WrongAnswerNotice message={currentQuestion.feedback?.incorrect ?? currentQuestion.options?.find(opt => opt && opt.id === selected)?.label ?? currentQuestion.options?.find(opt => opt && opt.id === selected)?.text ?? 'That was incorrect.'} />
-          )
-        ) : (
           <div className="min-h-[88px]" />
-        )}
       </div>
     </div>
   );

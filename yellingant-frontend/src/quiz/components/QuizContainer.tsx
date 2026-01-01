@@ -165,12 +165,16 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, is
     // If we are in a preview context (e.g. inside admin dashboard), we might want to avoid full page layout
     // But QuizResult is designed as a full page.
     // We can render it directly.
+    const resultWithSummaries = quizState.result as any;
     return (
       <QuizResult 
         result={quizState.result} 
         quizTitle={quizData.title} 
         onRestart={handleRestart} 
-        score={quizState.score} 
+        score={quizState.score}
+        quizType={quizData.type}
+        answerSummaries={resultWithSummaries?.answerSummaries}
+        showAnswerSummary={quizData.type === 'trivia' || quizData.type === 'scored'}
       />
     );
   }
@@ -288,9 +292,9 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, is
                   )}
                 </div>
                 
-                {/* Ad Slot */}
-                <div className="w-full">
-                  <AdSlot slotId="quiz-main" className="w-full" />
+                {/* Ad Slot - Quiz Banner */}
+                <div className="w-full flex justify-center">
+                  <AdSlot slotId="quiz-main" variant="quiz-banner" />
                 </div>
                 
                 {/* Bottom Action Buttons */}
@@ -429,11 +433,9 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, is
                   )}
                 </div>
 
-                {/* Ad Slot */}
-                <div className="w-full flex justify-start">
-                  <div className="w-full">
-                    <AdSlot slotId="quiz-main" className="w-full" />
-                  </div>
+                {/* Ad Slot - Quiz Banner */}
+                <div className="w-full flex justify-center">
+                  <AdSlot slotId="quiz-main" variant="quiz-banner" />
                 </div>
 
                 {/* Bottom Action Buttons */}

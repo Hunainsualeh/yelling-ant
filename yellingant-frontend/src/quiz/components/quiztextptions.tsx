@@ -41,8 +41,8 @@ const QuizTextOptions: React.FC<QuizTextOptionsProps> = ({
           </div>
         </div>
 
-      <div className="w-full max-w-[798px] mx-auto mb-6 px-2">
-        <AdSlot slotId="quiz-main" className="w-full" />
+      <div className="w-full flex justify-center mb-6 px-2">
+        <AdSlot slotId="quiz-main" variant="quiz-banner" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 justify-center">

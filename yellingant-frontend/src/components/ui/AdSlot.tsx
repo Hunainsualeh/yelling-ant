@@ -4,7 +4,7 @@ import { request } from '../../utils/api';
 interface AdSlotProps {
   slotId?: string;
   className?: string;
-  variant?: 'default' | 'vertical-cards';
+  variant?: 'default' | 'vertical-cards' | 'quiz-banner';
   position?: 'left' | 'right'; // For vertical-cards, determines which ads to show
 }
 
@@ -196,6 +196,19 @@ const AdSlot = ({ slotId, className = '', variant = 'default', position }: AdSlo
         >
            {renderAdContent(ad2, 'Ad Slot 2')}
         </div>
+      </div>
+    );
+  }
+  
+  // Quiz Banner variant - 798px x 147px
+  if (variant === 'quiz-banner' || slotId === 'quiz-main') {
+    const ad = ads[0];
+    return (
+      <div 
+        className={`w-full max-w-[798px] h-[147px] mx-auto rounded-t-[4px] border border-[#B3B6B6] bg-white overflow-hidden relative ${className}`}
+        data-ad-slot={slotId || 'quiz-main'}
+      >
+        {renderAdContent(ad, 'Quiz Ad')}
       </div>
     );
   }

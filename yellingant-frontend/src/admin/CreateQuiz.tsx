@@ -22,6 +22,17 @@ type Question = {
   correctAnswer?: string;
 };
 
+// Quiz Result type for admin
+type QuizResultItem = {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  image: string;
+  minScore?: number;
+  maxScore?: number;
+};
+
 const CreateQuiz: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -31,7 +42,10 @@ const CreateQuiz: React.FC = () => {
     description: 'Test your knowledge about environmental science basics, including renewable energy, ecosystems, and sustainability.',
     category: 'Personality',
     scoring: 'Medium',
+    quizType: 'personality' as 'personality' | 'trivia' | 'scored' | 'image-options',
+    heroImage: '' as string,
   });
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
 
   const [settings, setSettings] = useState({
     timeLimit: 15,
@@ -39,6 +53,14 @@ const CreateQuiz: React.FC = () => {
     randomize: true,
     immediateResults: true,
   });
+  
+  // Quiz results - customizable per quiz type
+  const [quizResults, setQuizResults] = useState<QuizResultItem[]>([
+    { id: 'r1', type: 'excellent', title: 'Quiz Master!', description: 'Perfect score! You really know your stuff!', image: '', minScore: 90, maxScore: 100 },
+    { id: 'r2', type: 'good', title: 'Great Job!', description: 'You have solid knowledge in this area.', image: '', minScore: 70, maxScore: 89 },
+    { id: 'r3', type: 'average', title: 'Good Effort!', description: 'Keep learning and try again!', image: '', minScore: 50, maxScore: 69 },
+    { id: 'r4', type: 'poor', title: 'Keep Trying!', description: 'Practice makes perfect. Give it another shot!', image: '', minScore: 0, maxScore: 49 },
+  ]);
   
   const [questions, setQuestions] = useState<Question[]>([
     {
@@ -138,6 +160,22 @@ const CreateQuiz: React.FC = () => {
     try {
       // Upload files first to get URLs
       const uploadedAssets: Record<string, string[]> = {};
+      
+      // Upload hero image if it's a file
+      let heroImageUrl = quizDetails.heroImage;
+      if (heroImageFile) {
+        try {
+          const uploaded = await api.uploadImages([heroImageFile], [quizDetails.title + ' thumbnail'], localStorage.getItem('admin_token') || undefined);
+          heroImageUrl = (uploaded.files && uploaded.files[0]) ? (uploaded.files[0].cdnUrl || uploaded.files[0].url || uploaded.files[0].filename) : quizDetails.heroImage;
+        } catch (err) {
+          console.warn('Hero image upload failed, using URL if provided');
+        }
+      }
+      // If heroImage is a blob URL, clear it (can't use blob URLs)
+      if (heroImageUrl.startsWith('blob:')) {
+        heroImageUrl = '';
+      }
+
       for (const q of questions) {
         const qKey = `q_${q.id}`;
         const files = mediaFiles[qKey];
@@ -163,9 +201,11 @@ const CreateQuiz: React.FC = () => {
         }
       }
 
-      // Determine overall quiz type based on first question or majority
+      // Determine overall quiz type based on quizDetails or question types
       const questionTypes = questions.map(q => q.type);
       const determineQuizType = () => {
+        // Use explicitly set quiz type if available
+        if (quizDetails.quizType) return quizDetails.quizType;
         if (questionTypes.includes('personality')) return 'personality';
         if (questionTypes.includes('image-options') || questionTypes.includes('image-choice')) return 'image-options';
         if (questionTypes.includes('figma-image')) return 'figma-image';
@@ -181,7 +221,8 @@ const CreateQuiz: React.FC = () => {
         dek: quizDetails.description || '',
         type: determineQuizType(),
         primary_colony: quizDetails.category || 'General',
-        heroImage: '', // Can be set in quiz details
+        heroImage: heroImageUrl,
+        hero_image: heroImageUrl,
         totalQuestions: questions.length,
         questions: questions.map((qq, idx) => {
           const qKey = `q_${qq.id}`;
@@ -222,12 +263,16 @@ const CreateQuiz: React.FC = () => {
             sliderMaxLabel: qq.sliderMaxLabel,
           };
         }),
-        // Results should be an ARRAY for QuizContainer compatibility
-        results: [
-          { id: 'r1', type: 'default', title: 'Great Job!', description: 'You completed the quiz.', image: '' },
-          { id: 'r2', type: 'excellent', title: 'Excellent!', description: 'Outstanding performance!', image: '' },
-          { id: 'r3', type: 'good', title: 'Good Work!', description: 'Nice effort!', image: '' },
-        ],
+        // Results - use custom results from state
+        results: quizResults.map(r => ({
+          id: r.id,
+          type: r.type,
+          title: r.title,
+          description: r.description,
+          image: r.image,
+          minScore: r.minScore,
+          maxScore: r.maxScore,
+        })),
       };
 
       // Debug: Log the payload being sent to the API
@@ -324,6 +369,77 @@ const CreateQuiz: React.FC = () => {
                   className="w-full px-4 py-3 bg-[#F9FAFB] border border-gray-200 rounded-[8px] text-[14px] font-medium text-[#2B2B2B] min-h-[100px]"
                 />
               </div>
+
+              {/* Quiz Thumbnail/Hero Image */}
+              <div>
+                <label className="block font-geist text-[14px] font-semibold text-[#2B2B2B] mb-2">Quiz Thumbnail</label>
+                <p className="text-[12px] text-[#696F79] mb-3">This image will be shown on quiz cards and as the quiz header</p>
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* Image Preview */}
+                  <div className="w-full md:w-48 h-32 bg-gray-100 rounded-[8px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                    {quizDetails.heroImage ? (
+                      <img src={quizDetails.heroImage} alt="Quiz thumbnail" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center p-4">
+                        <svg className="w-8 h-8 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-[11px] text-gray-400">No image</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 space-y-3">
+                    {/* File Upload */}
+                    <div>
+                      <label
+                        htmlFor="hero-image-upload"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#F9FAFB] border border-gray-200 rounded-[8px] text-[14px] font-medium text-[#2B2B2B] cursor-pointer hover:bg-gray-100 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Upload Image
+                      </label>
+                      <input
+                        id="hero-image-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setHeroImageFile(file);
+                            setQuizDetails({ ...quizDetails, heroImage: URL.createObjectURL(file) });
+                          }
+                        }}
+                      />
+                    </div>
+                    
+                    {/* URL Input */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Or paste image URL..."
+                        value={quizDetails.heroImage.startsWith('blob:') ? '' : quizDetails.heroImage}
+                        onChange={(e) => setQuizDetails({ ...quizDetails, heroImage: e.target.value })}
+                        className="flex-1 px-3 py-2 bg-[#F9FAFB] border border-gray-200 rounded-[8px] text-[14px]"
+                      />
+                      {quizDetails.heroImage && (
+                        <button
+                          onClick={() => {
+                            setQuizDetails({ ...quizDetails, heroImage: '' });
+                            setHeroImageFile(null);
+                          }}
+                          className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-[8px] text-[14px]"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -347,6 +463,28 @@ const CreateQuiz: React.FC = () => {
                   </select>
                 </div>
 
+                <div>
+                  <label className="block font-geist text-[14px] font-semibold text-[#2B2B2B] mb-2">Quiz Type</label>
+                  <select
+                    value={quizDetails.quizType}
+                    onChange={(e) => setQuizDetails({ ...quizDetails, quizType: e.target.value as any })}
+                    className="w-full px-4 py-3 bg-[#F9FAFB] border border-gray-200 rounded-[8px] text-[14px] font-medium text-[#2B2B2B]"
+                  >
+                    <option value="personality">🧠 Personality Quiz</option>
+                    <option value="trivia">📚 Trivia Quiz (Right/Wrong)</option>
+                    <option value="scored">📊 Scored Quiz (Points)</option>
+                    <option value="image-options">🖼️ This or That Quiz</option>
+                  </select>
+                  <p className="text-[12px] text-[#696F79] mt-1">
+                    {quizDetails.quizType === 'personality' && 'Results based on personality type mapping'}
+                    {quizDetails.quizType === 'trivia' && 'Shows correct/wrong answers with score'}
+                    {quizDetails.quizType === 'scored' && 'Points-based scoring system'}
+                    {quizDetails.quizType === 'image-options' && 'Visual choice quiz with image options'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-geist text-[14px] font-semibold text-[#2B2B2B] mb-2">Difficulty Level</label>
                   <select
@@ -447,6 +585,136 @@ const CreateQuiz: React.FC = () => {
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C85103]"></div>
                 </label>
               </div>
+            </div>
+          </div>
+
+          {/* Quiz Results Editor */}
+          <div className="mt-8">
+            <h3 className="text-[20px] font-geist font-semibold text-[#2B2B2B] mb-2">Quiz Results</h3>
+            <p className="text-[14px] font-geist font-normal text-[#696F79] mb-4">
+              {quizDetails.quizType === 'trivia' || quizDetails.quizType === 'scored' 
+                ? 'Configure results based on score ranges' 
+                : 'Configure result options for personality mapping'}
+            </p>
+            
+            <div className="space-y-4">
+              {quizResults.map((result, idx) => (
+                <div key={result.id} className="p-4 bg-[#F9FAFB] rounded-[12px] border border-gray-200">
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="text-[14px] font-medium text-[#2B2B2B]">Result {idx + 1}</span>
+                    {quizResults.length > 1 && (
+                      <button
+                        onClick={() => setQuizResults(prev => prev.filter(r => r.id !== result.id))}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label className="block text-[12px] text-[#696F79] mb-1">Result Title</label>
+                      <input
+                        type="text"
+                        value={result.title}
+                        onChange={(e) => setQuizResults(prev => prev.map(r => 
+                          r.id === result.id ? { ...r, title: e.target.value } : r
+                        ))}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px]"
+                        placeholder="e.g., Quiz Master!"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[12px] text-[#696F79] mb-1">Type/Category</label>
+                      <input
+                        type="text"
+                        value={result.type}
+                        onChange={(e) => setQuizResults(prev => prev.map(r => 
+                          r.id === result.id ? { ...r, type: e.target.value } : r
+                        ))}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px]"
+                        placeholder="e.g., excellent, introvert, leader"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="block text-[12px] text-[#696F79] mb-1">Description</label>
+                    <textarea
+                      value={result.description}
+                      onChange={(e) => setQuizResults(prev => prev.map(r => 
+                        r.id === result.id ? { ...r, description: e.target.value } : r
+                      ))}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px] min-h-[60px]"
+                      placeholder="Describe what this result means..."
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[12px] text-[#696F79] mb-1">Result Image URL</label>
+                      <input
+                        type="text"
+                        value={result.image}
+                        onChange={(e) => setQuizResults(prev => prev.map(r => 
+                          r.id === result.id ? { ...r, image: e.target.value } : r
+                        ))}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px]"
+                        placeholder="https://..."
+                      />
+                    </div>
+                    {(quizDetails.quizType === 'trivia' || quizDetails.quizType === 'scored') && (
+                      <>
+                        <div>
+                          <label className="block text-[12px] text-[#696F79] mb-1">Min Score %</label>
+                          <input
+                            type="number"
+                            value={result.minScore || 0}
+                            onChange={(e) => setQuizResults(prev => prev.map(r => 
+                              r.id === result.id ? { ...r, minScore: Number(e.target.value) } : r
+                            ))}
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px]"
+                            min={0}
+                            max={100}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[12px] text-[#696F79] mb-1">Max Score %</label>
+                          <input
+                            type="number"
+                            value={result.maxScore || 100}
+                            onChange={(e) => setQuizResults(prev => prev.map(r => 
+                              r.id === result.id ? { ...r, maxScore: Number(e.target.value) } : r
+                            ))}
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-[6px] text-[14px]"
+                            min={0}
+                            max={100}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              <button
+                onClick={() => setQuizResults(prev => [
+                  ...prev,
+                  { 
+                    id: `r${Date.now()}`, 
+                    type: 'custom', 
+                    title: 'New Result', 
+                    description: 'Description for this result...', 
+                    image: '',
+                    minScore: 0,
+                    maxScore: 100,
+                  }
+                ])}
+                className="w-full py-3 border-2 border-dashed border-[#C85103] rounded-[8px] text-[14px] text-[#C85103] font-medium hover:bg-orange-50 transition-colors"
+              >
+                + Add Result Option
+              </button>
             </div>
           </div>
         </div>
