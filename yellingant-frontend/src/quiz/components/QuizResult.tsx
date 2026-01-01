@@ -65,7 +65,7 @@ export const QuizResult: React.FC<QuizResultProps> = ({
           
           {/* Left Vertical Ad Slot */}
           <div className="hidden xl:flex items-start sticky top-8 xl:col-start-1">
-            <AdSlot variant="vertical-cards" />
+            <AdSlot variant="vertical-cards" position="left" />
           </div>
 
           <div className="w-full max-w-[798px] mx-auto relative overflow-visible xl:col-start-2">
@@ -211,7 +211,7 @@ export const QuizResult: React.FC<QuizResultProps> = ({
 
           {/* Right Vertical Ad Slot */}
           <div className="hidden xl:flex items-start sticky top-8 xl:col-start-3">
-            <AdSlot variant="vertical-cards" />
+            <AdSlot variant="vertical-cards" position="right" />
           </div>
         </div>
       </div>

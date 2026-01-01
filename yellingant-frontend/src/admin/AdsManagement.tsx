@@ -45,7 +45,7 @@ const AdsManagement: React.FC = () => {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [previewAd, setPreviewAd] = useState<Ad | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [, setActionLoading] = useState(false);
 
   const navigate = useNavigate();
   const { showToast } = useToast();

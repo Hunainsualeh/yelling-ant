@@ -245,7 +245,7 @@ const QuizPage: React.FC = () => {
         </div>
         {/* Vertical Cards Ad Slot - Top Right */}
         <div className="hidden lg:flex items-start min-h-full pr-0 mr-6">
-          <AdSlot variant="vertical-cards" />
+          <AdSlot variant="vertical-cards" position="right" />
         </div>
       </div>
       <Footer />

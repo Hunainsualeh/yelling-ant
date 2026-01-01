@@ -21,7 +21,7 @@ const QuizList: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [, setActionLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
   
   const navigate = useNavigate();

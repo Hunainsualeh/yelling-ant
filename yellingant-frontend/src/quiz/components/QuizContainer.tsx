@@ -192,7 +192,7 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, is
           <div className="w-full max-w-[1440px] mx-auto grid grid-cols-1 xl:grid-cols-[auto_minmax(300px,846px)_auto] gap-2 sm:gap-4 items-start">
             {/* Left Ad (desktop only) */}
             <div className="hidden xl:flex items-start justify-center sticky top-8">
-              <AdSlot variant="vertical-cards" />
+              <AdSlot variant="vertical-cards" position="left" />
             </div>
             
             {/* Main Quiz Card */}
@@ -309,7 +309,7 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, is
             
             {/* Right Ad (desktop only) */}
             <div className="hidden xl:flex items-start justify-center sticky top-8">
-              <AdSlot variant="vertical-cards" />
+              <AdSlot variant="vertical-cards" position="right" />
             </div>
           </div>
         </div>
@@ -329,7 +329,7 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, is
           {/* Left Sidebar Ad */}
           {!isPreview && (
           <div className="hidden xl:flex items-start justify-center sticky top-8">
-            <AdSlot variant="vertical-cards" />
+            <AdSlot variant="vertical-cards" position="left" />
           </div>
           )}
 
@@ -452,7 +452,7 @@ const QuizContainer: React.FC<QuizContainerProps> = ({ quizData: rawQuizData, is
           {/* Right Sidebar Ad */}
           {!isPreview && (
           <div className="hidden xl:flex items-start justify-center sticky top-8">
-            <AdSlot variant="vertical-cards" />
+            <AdSlot variant="vertical-cards" position="right" />
           </div>
           )}
         </div>

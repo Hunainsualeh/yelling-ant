@@ -5,13 +5,13 @@ import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import Button from "../ui/Button" // Note: Button.tsx is capitalized in the file system
 import { Textarea } from "../ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Switch } from "../ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { Upload, Info } from "lucide-react"
+import { Upload, Info, Check } from "lucide-react"
 import { createAd, updateAd } from "../../utils/api"
 import { useToast } from "../ui/toast"
 import { SuccessModal } from "../ui/SuccessModal"
+import { AD_SLOTS } from "../slots/SlotsTable"
 
 interface AdFormProps {
   initialData?: any;
@@ -25,12 +25,12 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   
-  // Form State
+  // Form State - slots is now an array for multi-select
   const [formData, setFormData] = useState({
     name: '',
     brand: '',
     description: '',
-    slot: '',
+    slots: [] as string[],  // Changed from single slot to array of slots
     active: true,
     headline: '',
     heroImage: '',
@@ -43,7 +43,7 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
         name: initialData.name || '',
         brand: initialData.brand || '',
         description: initialData.content?.description || '',
-        slot: initialData.slot || '',
+        slots: initialData.slot ? [initialData.slot] : [],  // Convert single slot to array
         active: initialData.status === 'active',
         headline: initialData.content?.headline || '',
         heroImage: initialData.content?.url || '',
@@ -56,19 +56,27 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const toggleSlot = (slotId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      slots: prev.slots.includes(slotId)
+        ? prev.slots.filter(s => s !== slotId)
+        : [...prev.slots, slotId]
+    }));
+  };
+
   const handleSave = async () => {
-    if (!formData.name || !formData.slot || !formData.url) {
-      showToast('Please fill in all required fields (Name, Slot, Destination URL)', 'error');
+    if (!formData.name || formData.slots.length === 0 || !formData.url) {
+      showToast('Please fill in all required fields (Name, at least one Slot, Destination URL)', 'error');
       return;
     }
 
     setIsLoading(true)
     try {
-      const payload = {
+      const basePayload = {
         name: formData.name,
         brand: formData.brand,
         status: formData.active ? 'active' : 'inactive',
-        slot: formData.slot,
         content: {
           type: 'image',
           url: formData.heroImage,
@@ -79,11 +87,18 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
       };
 
       if (isEditing && initialData?.id) {
-        await updateAd(initialData.id, payload);
+        // For editing, update with first slot (single ad update)
+        await updateAd(initialData.id, { ...basePayload, slot: formData.slots[0] });
         showToast('Ad updated successfully!', 'success');
       } else {
-        await createAd(payload);
-        showToast('Ad created successfully!', 'success');
+        // For creating, create one ad per selected slot
+        const createdAds = [];
+        for (const slot of formData.slots) {
+          const payload = { ...basePayload, slot };
+          await createAd(payload);
+          createdAds.push(slot);
+        }
+        showToast(`Ad created successfully for ${createdAds.length} slot(s)!`, 'success');
       }
 
       setShowSuccessModal(true);
@@ -139,22 +154,58 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="slot">Ad Slot Placement</Label>
-              <Select onValueChange={(val) => handleInputChange('slot', val)} value={formData.slot}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select where this ad should appear" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sidebar">Sidebar (Quiz Page Vertical Cards)</SelectItem>
-                  <SelectItem value="quiz-main">Quiz Main Content (Mid-roll)</SelectItem>
-                  <SelectItem value="quiz-result">Quiz Results Page</SelectItem>
-                  <SelectItem value="YA_QHOME_FEED_001">Homepage Feed Ad 1</SelectItem>
-                  <SelectItem value="YA_QHOME_FEED_002">Homepage Feed Ad 2</SelectItem>
-                  <SelectItem value="YA_QHOME_FEED_003">Homepage/Quiz Footer Ad</SelectItem>
-                  <SelectItem value="YA_QHOME_TOP_001">Homepage Top Takeover</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500">Choose the specific location on the site where this ad will be displayed.</p>
+              <Label>Ad Slot Placement(s) <span className="text-red-500">*</span></Label>
+              <p className="text-xs text-gray-500 mb-2">Select one or more slots where this ad should appear. The ad will be created for each selected slot.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {AD_SLOTS.map((slot) => (
+                  <div
+                    key={slot.id}
+                    onClick={() => toggleSlot(slot.id)}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      formData.slots.includes(slot.id)
+                        ? 'border-orange-500 bg-orange-50'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 ${
+                        formData.slots.includes(slot.id)
+                          ? 'bg-orange-500 border-orange-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {formData.slots.includes(slot.id) && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{slot.name}</p>
+                          {!slot.multiAd && (
+                            <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                              1 ad only
+                            </span>
+                          )}
+                          {slot.multiAd && (
+                            <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                              up to {slot.maxAds} ads
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 font-mono">{slot.id}</p>
+                        <p className="text-xs text-gray-400 mt-1">{slot.dimensions}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {formData.slots.length > 0 && (
+                <p className="text-sm text-orange-600 mt-2">
+                  {formData.slots.length} slot(s) selected
+                </p>
+              )}
+              <p className="text-xs text-blue-600 mt-1">
+                💡 For "1 ad only" slots, posting a new active ad will automatically deactivate the previous one.
+              </p>
             </div>
             <div className="flex items-center space-x-2 pt-4">
               <Switch 
