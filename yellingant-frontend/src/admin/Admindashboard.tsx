@@ -52,7 +52,7 @@ const AdminDashboard: React.FC = () => {
         <DashboardHeader />
 
         <div className="mt-6 mb-4">
-          <h1 className="text-[32px] font-gotham font-medium">Overview</h1>
+          <h1 className="text-[32px] font-gotham font-medium">Dashboard</h1>
           
         </div>
 
