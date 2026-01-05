@@ -119,7 +119,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="space-y-3">
               {loading ? (
-                <div className="text-gray-500">Loading...</div>
+                <div className="text-gray-500">Loadingg...</div>
               ) : recentQuizzes.length === 0 ? (
                 <div className="text-gray-500">No quizzes yet</div>
               ) : (
