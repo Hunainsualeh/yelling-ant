@@ -11,11 +11,12 @@ export const getQuizList = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { colony, tag, limit = '20', offset = '0' } = req.query;
+    const { colony, tag, category, limit = '20', offset = '0' } = req.query;
 
     let queryText = `
       SELECT id, slug, title, quiz_data->>'dek' as dek, 
              quiz_data->>'hero_image' as hero_image,
+             quiz_data->>'primary_colony' as primary_colony,
              quiz_data->'tags' as tags,
              created_at, updated_at
       FROM quizzes
@@ -31,6 +32,12 @@ export const getQuizList = async (
         OR quiz_data->'secondary_colonies' ? $${params.length + 1}
       )`;
       params.push(colony);
+    }
+
+    // Filter by category (primary_colony)
+    if (category) {
+      queryText += ` AND quiz_data->>'primary_colony' = $${params.length + 1}`;
+      params.push(category);
     }
 
     // Filter by tag

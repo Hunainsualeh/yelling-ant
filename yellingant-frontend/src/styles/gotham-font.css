@@ -37,12 +37,7 @@
       font-weight: 500;
 }
 
-@font-face {
-  font-family: 'Gotham';
-  src: url('../assets/fonts/gotham/Gotham-Medium.ttf') format('truetype');
-  font-weight: 500;
-  font-style: normal;
-}
+
 @font-face {
   font-family: 'Gotham';
   src: url('/fonts/gotham/Gotham-Book.otf') format('opentype');

@@ -7,17 +7,29 @@ let pool: Pool | null = null;
  */
 export const connectDatabase = async (): Promise<void> => {
   try {
-    pool = new Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'quizbuzz',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD,
-      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-      max: 20, // Maximum number of clients in the pool
+    const config: any = {
+      max: 10, // Reduced pool size for serverless
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    });
+      connectionTimeoutMillis: 30000, // 30 seconds for Neon cold starts
+      statement_timeout: 30000, // 30 second query timeout
+    };
+
+    if (process.env.DATABASE_URL) {
+      config.connectionString = process.env.DATABASE_URL;
+      // Neon/Cloud DBs usually require SSL
+      if (process.env.DATABASE_URL.includes('sslmode=require')) {
+         config.ssl = { rejectUnauthorized: false };
+      }
+    } else {
+      config.host = process.env.DB_HOST || 'localhost';
+      config.port = parseInt(process.env.DB_PORT || '5432');
+      config.database = process.env.DB_NAME || 'quizbuzz';
+      config.user = process.env.DB_USER || 'postgres';
+      config.password = process.env.DB_PASSWORD;
+      config.ssl = process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false;
+    }
+
+    pool = new Pool(config);
 
     // Test connection
     const client: PoolClient = await pool.connect();
@@ -45,11 +57,13 @@ export const getPool = (): Pool => {
 };
 
 /**
- * Execute a query
+ * Execute a query with timeout
  */
 export const query = async (text: string, params?: any[]) => {
   const client = await getPool().connect();
   try {
+    // Set statement timeout to 25 seconds
+    await client.query('SET statement_timeout = 25000');
     const result = await client.query(text, params);
     return result;
   } finally {
@@ -83,6 +97,16 @@ const initializeSchema = async (): Promise<void> => {
         -- Indexes for performance
         CONSTRAINT unique_slug UNIQUE (slug)
       );
+    `);
+
+    // Ensure columns exist (migration for existing tables)
+    await client.query(`
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1;
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS published_at TIMESTAMP;
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS created_by VARCHAR(255);
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'draft';
+      ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_data JSONB;
     `);
 
     // Create indexes
@@ -130,6 +154,29 @@ const initializeSchema = async (): Promise<void> => {
       );
     `);
 
+    // Create ads table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ads (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        brand VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'active',
+        slot VARCHAR(255),
+        content JSONB,
+        impressions INTEGER DEFAULT 0,
+        clicks INTEGER DEFAULT 0,
+        ctr FLOAT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create ads indexes
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_ads_slot ON ads(slot);
+      CREATE INDEX IF NOT EXISTS idx_ads_status ON ads(status);
+    `);
+
     await client.query('COMMIT');
     console.log('Database schema initialized');
   } catch (error) {
@@ -138,6 +185,21 @@ const initializeSchema = async (): Promise<void> => {
     throw error;
   } finally {
     client.release();
+  }
+};
+
+/**
+ * Warmup database connection by running a simple query
+ * This helps avoid cold start delays on serverless databases like Neon
+ */
+export const warmupDatabase = async (): Promise<void> => {
+  try {
+    console.log('Warming up database connection...');
+    const start = Date.now();
+    await query('SELECT 1');
+    console.log(`Database warmup completed in ${Date.now() - start}ms`);
+  } catch (error) {
+    console.warn('Database warmup failed:', error);
   }
 };
 

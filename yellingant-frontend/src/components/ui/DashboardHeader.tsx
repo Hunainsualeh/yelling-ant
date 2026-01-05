@@ -7,20 +7,19 @@ const DashboardHeader: React.FC = () => {
 
   return (
     <header className="flex items-center justify-between mb-2">
-      <div className="relative">
+      <div className="relative flex-none order-0 grow-0 w-[379px] h-[40px]">
+        <div className="absolute left-[16px] top-[9px] w-[22px] h-[22px] pointer-events-none">
+          <svg className="w-full h-full text-[#696F79]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        </div>
         <input
-          className="border rounded-lg px-3 py-2 w-64 pr-10"
+          className="w-full h-full bg-[#FAFAFA] rounded-[10px] pl-[44px] pr-3 focus:outline-none font-helvetica font-normal text-[16px] leading-[18px] text-[#696F79] placeholder-[#696F79]"
           placeholder="Search..."
           aria-label="search"
+          style={{ letterSpacing: '-0.292683px' }}
         />
-        <div className="absolute right-1 top-1/2 -translate-y-1/2">
-          <Button variant="search_icon">
-            <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          </Button>
-        </div>
       </div>
 
       <div>

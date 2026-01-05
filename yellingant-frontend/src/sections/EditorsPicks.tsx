@@ -37,13 +37,13 @@ const EditorsPicks = () => {
     <section className="py-12 bg-white w-full">
       <div className="w-[90%] mx-auto">
         <div className="w-full flex">
-          <div className="w-full max-w-[220px]">
+          <div className="w-full md:max-w-[220px]">
             <EditorsPicksHeading />
           </div>
         </div>
         <div className="mt-8 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px]">
           {editorsPicks.map((card) => (
-            <div key={card.id} className="w-full max-w-[384px] mx-auto ">
+            <div key={card.id} className="w-full">
               <EditorCard image={card.image} title={card.title} />
             </div>
           ))}

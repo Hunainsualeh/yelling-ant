@@ -1,9 +1,9 @@
-import { Instagram, X, LinkedIn, Email, Telegram } from '../ui/Icons.tsx';
+import { Facebook, X, LinkedIn, Email, Telegram } from '../ui/Icons.tsx';
 
 const Footer = () => {
   return (
-    <footer className="relative bg-black h-[286px] ">
-      <div className="w-full mx-auto py-4 grid grid-cols-1 md:grid-cols-4 gap-8 h-full items-start ml-[90px]">
+    <footer className="relative bg-black h-auto md:h-[286px]">
+      <div className="w-full mx-auto py-8 md:py-4 grid grid-cols-1 md:grid-cols-4 gap-8 h-full items-start px-4 md:px-0 md:ml-[90px]">
         
         {/* Logo & Tagline */}
         <div className="flex flex-col gap-4">
@@ -43,19 +43,19 @@ const Footer = () => {
           <h3 className="text-[#B3B6B6] font-medium font-helvetica font-weight:400 text-[16px]">Share this Quiz</h3>
           <div className="flex gap-3 mt-2">
             <a href="#" className="w-10 h-10 bg-[#C85103] rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors">
-              <Instagram className="w-5 h-5 text-white" />
+              <Facebook className="w-6 h-6 text-white" />
             </a>
             <a href="#" className="w-10 h-10 bg-[#C85103] rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors">
-              <X className="w-5 h-5 text-white" />
+              <LinkedIn className="w-6 h-6 text-white" />
             </a>
             <a href="#" className="w-10 h-10 bg-[#C85103] rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors">
-              <LinkedIn className="w-5 h-5 text-white" />
-            </a>
-            <a href="mailto:hello@example.com" className="w-10 h-10 bg-[#C85103] rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors" aria-label="Email">
-              <Email className="w-5 h-5 text-white" />
+              <X className="w-6 h-6 text-white" />
             </a>
             <a href="https://t.me/yourhandle" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-[#C85103] rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors" aria-label="Telegram">
-              <Telegram className="w-5 h-5 text-white" />
+              <Telegram className="w-6 h-6 text-white" />
+            </a>
+            <a href="mailto:hello@example.com" className="w-10 h-10 bg-[#C85103] rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors" aria-label="Email">
+              <Email className="w-6 h-6 text-white" />
             </a>
           </div>
         </div>

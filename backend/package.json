@@ -21,6 +21,7 @@
   "author": "Yelling Ant",
   "license": "UNLICENSED",
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "aws-sdk": "^2.1491.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -31,6 +32,7 @@
     "ioredis": "^5.8.2",
     "joi": "^17.11.0",
     "js-yaml": "^4.1.0",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.0.3",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",

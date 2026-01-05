@@ -18,8 +18,9 @@ import seoRoutes from './routes/seo.routes';
 import integrationRoutes from './routes/integration.routes';
 import cacheRoutes from './routes/cache.routes';
 import internalRoutes from './routes/internal.routes';
+import adsRoutes from './routes/ads.routes';
 import { errorHandler } from './middleware/error.middleware';
-import { connectDatabase } from './config/database';
+import { connectDatabase, warmupDatabase } from './config/database';
 import { getRedis, closeRedis } from './config/redis';
 import net from 'net';
 
@@ -52,8 +53,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ extended: true, limit: '500mb' }));
 
 // Response compression
 app.use(compression());
@@ -68,10 +69,10 @@ app.use('/uploads', express.static('uploads'));
 try {
   // Load OpenAPI spec from YAML file
   const openApiPath = path.join(__dirname, '../../docs/api/openapi.yaml');
-  const openApiDocument = yaml.load(fs.readFileSync(openApiPath, 'utf8'));
+  const openApiDocument = yaml.load(fs.readFileSync(openApiPath, 'utf8')) as Record<string, unknown>;
   
   // Serve Swagger UI at /api/docs
-  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument, {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument as swaggerUi.JsonObject, {
     customCss: '.swagger-ui .topbar { display: none }',
     customSiteTitle: 'QuizBuzz API Documentation',
   }));
@@ -98,6 +99,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API routes
 app.use('/api/quiz', quizRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ads', adsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/colony', colonyRoutes);
 app.use('/api/user', userRoutes);
@@ -144,6 +146,28 @@ const startServer = async () => {
     try {
       await connectDatabase();
       console.log('PostgreSQL connected successfully');
+      
+      // Warmup database to avoid cold start delays on first request
+      await warmupDatabase();
+      
+      // Pre-warm the ads table specifically (commonly accessed)
+      try {
+        const { query } = await import('./config/database');
+        await query('SELECT COUNT(*) FROM ads');
+        console.log('Ads table pre-warmed');
+        
+        // Set up periodic keepalive to prevent Neon cold starts (every 4 minutes)
+        setInterval(async () => {
+          try {
+            await query('SELECT 1');
+          } catch (e) {
+            console.warn('Database keepalive failed:', e);
+          }
+        }, 4 * 60 * 1000);
+        console.log('Database keepalive scheduled (every 4 minutes)');
+      } catch (e) {
+        console.warn('Ads table warmup skipped');
+      }
     } catch (error) {
       console.warn('PostgreSQL not available, continuing without database');
       console.warn('   Configure PostgreSQL credentials in .env file');

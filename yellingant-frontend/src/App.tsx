@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Header from './components/layout/Header.tsx';
 import Footer from './components/layout/Footer.tsx';
 import Hero from './sections/Hero.tsx';
@@ -8,6 +9,8 @@ import AdSlot from './components/ui/AdSlot.tsx';
 import AdContainer from './components/ui/AdContainer.tsx';
 
 function App() {
+  const [selectedCategory, setSelectedCategory] = useState<string>('Latest');
+
   return (
     <div className="bg-white overflow-x-hidden">
       
@@ -17,18 +20,18 @@ function App() {
       */}
       <Hero />
       
-      <QuizCategories />
+      <QuizCategories selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
       
       {/* First Feed Ad */}
         <AdContainer heightClass="h-[236px]" widthClass="w-[90%] mx-auto">
-        <AdSlot slotId="YA_QHOME_FEED_001" />
+        <AdSlot slotId="YA_QHOME_FEED_001" className="w-full h-full" />
       </AdContainer>
       
-      <TrendingSection />
+      <TrendingSection selectedCategory={selectedCategory} />
       
       {/* Second Feed Ad */}
         <AdContainer heightClass="h-[174px]" widthClass="w-[90%] mx-auto">
-        <AdSlot slotId="YA_QHOME_FEED_002" />
+        <AdSlot slotId="YA_QHOME_FEED_002" className="w-full h-full" />
       </AdContainer>
       
       <EditorsPicks />
@@ -39,7 +42,7 @@ function App() {
 
       {/* Third Feed Ad (after Footer) */}
       <AdContainer heightClass="h-[266px]" widthClass="w-[100%] mx-auto" className="rounded-tl-[4px] rounded-tr-[4px] m-0">
-        <AdSlot slotId="YA_QHOME_FEED_003" />
+        <AdSlot slotId="YA_QHOME_FEED_003" className="w-full h-full" />
       </AdContainer>
     </div>
   );

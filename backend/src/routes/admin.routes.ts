@@ -27,7 +27,7 @@ const router = Router();
  * Upload images for quiz (hero, questions, results, etc.)
  * Supports multiple files
  */
-router.post('/upload', authMiddleware, upload.array('images', 10), uploadImage);
+router.post('/upload', authMiddleware, upload.array('images', 50), uploadImage);
 
 /**
  * GET /api/admin/images
@@ -40,7 +40,7 @@ router.get('/images', authMiddleware, getImageList);
  * List all quizzes including drafts (admin view)
  * Query params: ?status=draft&limit=50&offset=0
  */
-router.get('/quiz', authMiddleware, getAdminQuizList);
+router.get('/quiz', getAdminQuizList);
 
 /**
  * POST /api/admin/quiz

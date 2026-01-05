@@ -1,9 +1,10 @@
 interface ProgressIndicatorProps {
   value?: number;
   current?: number;
+  total?: number;
 }
 
-const ProgressIndicator = ({ value = 42, current = 8 }: ProgressIndicatorProps) => {
+const ProgressIndicator = ({ value = 42, current = 8, total: _total }: ProgressIndicatorProps) => {
   return (
     <div className="flex w-full max-w-[798px] mx-auto h-[41px] flex-col items-start justify-center gap-2 pl-0 pr-[100px] pt-[5px] pb-6 -translate-y-4 animate-fade-in opacity-0 [--animation-delay:600ms]">
       <div className="absolute w-full max-w-[798px] top-[5px] left-0 h-3 bg-[#f0dcff] opacity-20 rounded-[100px]" />

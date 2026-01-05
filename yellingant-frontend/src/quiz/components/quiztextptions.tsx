@@ -33,35 +33,35 @@ const QuizTextOptions: React.FC<QuizTextOptionsProps> = ({
       <div className="">
        
       </div>
-        <div className="mb-8 flex items-center justify-center">
-          <div className="w-full min-h-[64px] rounded-[12px] flex items-center justify-center p-4 sm:p-8">
-            <h2 className="w-full max-w-[320px] text-[20px] sm:text-[24px] leading-[29px] text-center text-[#101828] font-normal font-helvetica">
+        <div className="mb-6 sm:mb-8 flex items-center justify-center">
+          <div className="w-full min-h-[56px] sm:min-h-[64px] rounded-[12px] flex items-center justify-center p-3 sm:p-8">
+            <h2 className="w-full max-w-[320px] text-[18px] sm:text-[24px] leading-[26px] sm:leading-[29px] text-center text-[#101828] font-normal font-helvetica">
               {currentQuestion.question}
             </h2>
           </div>
         </div>
 
-      <div className="w-full max-w-[798px] mx-auto mb-6 px-2">
-        <AdSlot slotId="quiz-main" className="w-full" />
+      <div className="w-full flex justify-center mb-4 sm:mb-6 px-2">
+        <AdSlot slotId="quiz-main" variant="quiz-banner" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 justify-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 justify-center px-2">
         {currentQuestion.options?.map((opt: QuizAnswer, idx: number) => {
           const letter = String.fromCharCode(65 + idx); // A, B, C...
           return (
             <button
               key={opt.id}
               onClick={() => handleClick(opt.id)}
-                className={`relative flex flex-row bg-white rounded-[12px] border transition-shadow duration-150 p-4 items-center gap-4 cursor-pointer w-full max-w-[379px] font-['Helvetica','Arial',sans-serif] text-[18px] sm:text-[24px] font-normal ${
+                className={`relative flex flex-row bg-white rounded-[12px] border transition-shadow duration-150 p-3 sm:p-4 items-center gap-3 sm:gap-4 cursor-pointer w-full max-w-[379px] mx-auto font-['Helvetica','Arial',sans-serif] text-[16px] sm:text-[24px] font-normal ${
                 selectedAnswer === opt.id ? 'border-[#AD46FF] shadow-lg' : 'border-[#EDEDED]'
               }`}
             >
-                <div className="flex-shrink-0 flex items-center justify-center rounded-full bg-white w-10 h-10 shadow-sm">
-                  <span className="font-['Helvetica','Arial',sans-serif] font-bold text-sm text-[#101828]">{letter}</span>
+                <div className="flex-shrink-0 flex items-center justify-center rounded-full bg-white w-8 h-8 sm:w-10 sm:h-10 shadow-sm">
+                  <span className="font-['Helvetica','Arial',sans-serif] font-bold text-xs sm:text-sm text-[#101828]">{letter}</span>
                 </div>
 
                 <div className="flex-1 text-left overflow-visible">
-                  <div className="w-full max-w-[204px] min-h-[32px] text-[14px] sm:text-[16px] leading-[24px] text-[#696F79] break-words">
+                  <div className="w-full max-w-[204px] min-h-[28px] sm:min-h-[32px] text-[13px] sm:text-[16px] leading-[20px] sm:leading-[24px] text-[#696F79] break-words">
                     {opt.label ?? opt.text}
                   </div>
                 </div>

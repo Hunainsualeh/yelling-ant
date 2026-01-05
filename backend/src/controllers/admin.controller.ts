@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { query } from '../config/database';
+import { query, getPool } from '../config/database';
 
 /**
  * GET /api/admin/quiz
@@ -11,6 +11,22 @@ export const getAdminQuizList = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    // Check if database is available
+    try {
+      getPool();
+    } catch (dbError) {
+      // Database not connected - return empty list with warning
+      console.warn('Database not connected, returning empty quiz list');
+      res.json({
+        quizzes: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+        warning: 'Database not connected. Please start PostgreSQL.',
+      });
+      return;
+    }
+
     const { status, limit = '50', offset = '0' } = req.query;
 
     let queryText = `
@@ -27,18 +43,24 @@ export const getAdminQuizList = async (
     }
 
     queryText += ` ORDER BY updated_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(limit, offset);
+    params.push(parseInt(limit as string, 10), parseInt(offset as string, 10));
 
+    console.log('Executing query:', queryText, params);
     const result = await query(queryText, params);
 
     res.json({
       quizzes: result.rows,
       total: result.rows.length,
-      limit: parseInt(limit as string),
-      offset: parseInt(offset as string),
+      limit: parseInt(limit as string, 10),
+      offset: parseInt(offset as string, 10),
     });
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error('getAdminQuizList error:', error?.message || error);
+    console.error('Full error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch quizzes', 
+      details: error?.message || 'Unknown error' 
+    });
   }
 };
 

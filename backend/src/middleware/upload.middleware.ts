@@ -27,8 +27,8 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880'), // 5MB default
-    files: parseInt(process.env.MAX_FILES_PER_REQUEST || '10'),
+    fileSize: parseInt(process.env.MAX_FILE_SIZE || '524288000'), // 500MB default
+    files: parseInt(process.env.MAX_FILES_PER_REQUEST || '50'),
   },
 });
 

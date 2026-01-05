@@ -22,13 +22,25 @@ const PerformanceCard: React.FC<Props> = ({ title = '', questions = 0, completio
       <div className="h-full">
         <button
           onClick={() => navigate('/admin/create')}
-          className="w-full h-[160px] rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-white hover:bg-gray-50"
+          className="box-border flex flex-col justify-center items-center py-[34px] px-[13px] gap-2 w-full h-[160px] border border-dashed border-[#C85103] rounded-lg bg-white hover:bg-orange-50 transition-colors"
           type="button"
         >
-          <div className="text-center">
-            <div className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center mx-auto mb-3">+</div>
-            <div className="text-[14px] font-helvetica font-normal text-black">Create New Quiz</div>
-            <div className="text-[12px] font-helvetica font-normal text-[#696F79]">Add questions, set time limits and more</div>
+          <div className="flex flex-col items-center gap-[15px]">
+            {/* Orange circle with plus */}
+            <div className="w-8 h-8 rounded-full bg-[#C85103] flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            {/* Text content */}
+            <div className="flex flex-col items-center gap-2">
+              <span className="font-helvetica font-normal text-[16px] leading-[18px] text-center text-[#2B2B2B]">
+                Create New Quiz
+              </span>
+              <span className="font-helvetica font-normal text-[12px] leading-[14px] text-center text-[#696F79]">
+                Add questions, set time limits and more
+              </span>
+            </div>
           </div>
         </button>
       </div>
