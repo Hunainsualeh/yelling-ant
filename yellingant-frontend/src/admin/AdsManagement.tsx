@@ -3,7 +3,7 @@ import { Sidebar } from '../components';
 import { AdsStats } from '../components/ads/AdsStats';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getAds, deleteAd, updateAd } from '../utils/api';
+import { getAds, deleteAd, updateAd, bulkDeleteAds } from '../utils/api';
 import { useToast } from '../components/ui/toast';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { AdPreviewModal } from '../components/ads/AdPreviewModal';
@@ -46,6 +46,8 @@ const AdsManagement: React.FC = () => {
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [previewAd, setPreviewAd] = useState<Ad | null>(null);
   const [, setActionLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -223,7 +225,18 @@ const AdsManagement: React.FC = () => {
                   <tbody>
                     {filteredAds.map((ad) => (
                       <tr key={ad.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 text-sm font-medium">{ad.name}</td>
+                        <td className="py-4 text-sm font-medium">
+                          <input
+                            type="checkbox"
+                            className="mr-3"
+                            checked={selectedIds.includes(Number(ad.id))}
+                            onChange={(e) => {
+                              const idNum = Number(ad.id);
+                              setSelectedIds(prev => e.target.checked ? [...prev, idNum] : prev.filter(x => x !== idNum));
+                            }}
+                          />
+                          {ad.name}
+                        </td>
                         <td className="py-4 text-sm text-gray-600">{ad.brand}</td>
                         <td className="py-4 text-sm text-gray-600">
                           <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
@@ -305,6 +318,17 @@ const AdsManagement: React.FC = () => {
         </div>
       </main>
 
+      {/* Bulk delete button and confirm dialog */}
+      <div className="fixed bottom-6 right-6">
+        <button
+          disabled={selectedIds.length === 0}
+          onClick={() => setBulkDeleteDialogOpen(true)}
+          className={`px-4 py-2 rounded-lg text-white ${selectedIds.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
+        >
+          Delete Selected ({selectedIds.length})
+        </button>
+      </div>
+
       {/* Preview Modal */}
       <AdPreviewModal
         ad={previewAd}
@@ -319,6 +343,30 @@ const AdsManagement: React.FC = () => {
         onConfirm={handleDelete}
         title="Delete Ad"
         description={`Are you sure you want to delete "${selectedAd?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
+      />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        onConfirm={async () => {
+          try {
+            const token = localStorage.getItem('admin_token') || undefined;
+            await bulkDeleteAds(selectedIds, token);
+            showToast('Selected ads deleted', 'success');
+            setAds(ads.filter(a => !selectedIds.includes(Number(a.id))));
+            setSelectedIds([]);
+          } catch (e: any) {
+            console.error('Bulk delete failed', e);
+            showToast(e.message || 'Bulk delete failed', 'error');
+          } finally {
+            setBulkDeleteDialogOpen(false);
+          }
+        }}
+        title="Delete selected ads"
+        description={`Are you sure you want to delete ${selectedIds.length} selected ad(s)? This action cannot be undone.`}
         confirmText="Delete"
         type="danger"
       />

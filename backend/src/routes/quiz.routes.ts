@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getQuizList, getQuizBySlug, submitQuiz, getRelatedQuizzes } from '../controllers/quiz.controller';
+import { getQuizList, getQuizBySlug, submitQuiz, getRelatedQuizzes, searchQuizzes } from '../controllers/quiz.controller';
 import { getNextQuestionForAnswer } from '../controllers/branching.controller';
 import { validateQuizSubmission } from '../middleware/validation.middleware';
 import { rateLimiter } from '../middleware/rateLimit.middleware';
@@ -12,6 +12,13 @@ const router = Router();
  * Query params: ?colony=X&tag=Y&limit=10&offset=0
  */
 router.get('/', getQuizList);
+
+/**
+ * GET /api/quiz/search
+ * Search quizzes with normalized matching
+ * Query params: ?q=search+term&limit=20&offset=0
+ */
+router.get('/search', searchQuizzes);
 
 /**
  * GET /api/quiz/:slug

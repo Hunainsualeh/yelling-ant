@@ -366,6 +366,34 @@ export const getQuizAnalytics = async (
 };
 
 /**
+ * POST /api/admin/quiz/bulk-delete
+ * Body: { slugs: string[] }
+ */
+export const bulkDeleteQuizzes = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { slugs } = req.body;
+    if (!Array.isArray(slugs) || slugs.length === 0) {
+      res.status(400).json({ error: 'slugs array is required' });
+      return;
+    }
+
+    const result = await query(
+      `UPDATE quizzes SET status = 'archived', updated_at = $1 WHERE slug = ANY($2::text[]) RETURNING slug`,
+      [new Date(), slugs]
+    );
+
+    res.json({ message: 'Quizzes archived', archived: result.rows.map(r => r.slug) });
+  } catch (error) {
+    console.error('Error bulk archiving quizzes:', error);
+    res.status(500).json({ error: 'Failed to archive quizzes' });
+  }
+};
+
+/**
  * Helper: Generate URL-friendly slug
  */
 function generateSlug(title: string): string {

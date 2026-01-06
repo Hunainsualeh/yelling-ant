@@ -15,6 +15,7 @@ import Footer from '../components/layout/Footer';
 import AdSlot from '../components/ui/AdSlot';
 import AdContainer from '../components/ui/AdContainer';
 import transformQuizData from './utils/transformQuizData';
+import Loader from '../components/ui/Loader';
 
 const QuizPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -169,9 +170,7 @@ const QuizPage: React.FC = () => {
         <Header />
         <div className="flex-1 flex items-center justify-center h-[calc(100vh-486px)]">
           <div className="text-center">
-            <div className="text-2xl font-semibold text-gray-900 mb-2">
-              Loading quiz...
-            </div>
+            <Loader message="Loading quiz..." />
           </div>
         </div>
         <Footer />
@@ -185,74 +184,6 @@ const QuizPage: React.FC = () => {
   // Use a unified QuizContainer for all quiz types
   return (
     <QuizContainer quizData={quizData} />
-  );
-  const currentQuestion = quizData?.questions[quizState.currentQuestionIndex];
-  const progress = quizData ? ((quizState.currentQuestionIndex + 1) / (quizData?.totalQuestions ?? 1)) * 100 : 0;
-  const currentAnswer = quizState.answers[quizState.currentQuestionIndex];
-
-  return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <Header />
-      {/* Main Content with Quiz and AdSlot */}
-      <div className="w-full flex flex-row justify-between px-0 py-8 gap-4">
-        {/* Quiz Container */}
-        <div className="flex-1 max-w-none min-h-[700px] mx-auto mt-16 shadow-lg rounded-[20px] bg-white mr-6" style={{ width: 'min(100%, clamp(320px, 66vw, 900px))' }}>
-          {!quizState.isCompleted ? (
-            <div className="w-full space-y-8">
-              {/* Restart & Progress Section */}
-              <RestartSection 
-                onRestart={handleRestart}
-                progress={progress}
-                current={quizState.currentQuestionIndex + 1}
-                total={quizData?.totalQuestions ?? 0}
-              />
-
-              {/* Top Progress Indicator */}
-              <ProgressIndicator 
-                value={progress}
-                current={quizState.currentQuestionIndex + 1}
-              />
-
-              {/* Question */}
-              <div className="mt-8">
-                <QuizQuestion
-                  question={currentQuestion!}
-                  selectedAnswer={currentAnswer}
-                  onAnswerSelect={handleAnswerSelect}
-                />
-              </div>
-
-              {/* Next Button */}
-              <div className="mt-8">
-                <NextButton 
-                  onClick={handleNext}
-                  disabled={!currentAnswer}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="py-12">
-              {quizState.result && (
-                <QuizResult
-                  result={quizState.result!}
-                  quizTitle={quizData?.title ?? ''}
-                  onRestart={handleRestart}
-                  score={quizData && (quizData?.type === 'trivia' || quizData?.type === 'scored') ? quizState.score : undefined}
-                />
-              )}
-            </div>
-          )}
-        </div>
-        {/* Vertical Cards Ad Slot - Top Right */}
-        <div className="hidden lg:flex items-start min-h-full pr-0 mr-6">
-          <AdSlot variant="vertical-cards" position="right" />
-        </div>
-      </div>
-      <Footer />
-      <AdContainer heightClass="h-[266px]" widthClass="w-full max-w-none" className="rounded-tl-[4px] rounded-tr-[4px] m-0">
-        <AdSlot slotId="YA_QHOME_FEED_003" />
-      </AdContainer>
-    </div>
   );
 };
 

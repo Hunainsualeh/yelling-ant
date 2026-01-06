@@ -38,8 +38,8 @@ const CreateQuiz: React.FC = () => {
   const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [quizDetails, setQuizDetails] = useState({
-    title: 'Introduction to Environmental Science',
-    description: 'Test your knowledge about environmental science basics, including renewable energy, ecosystems, and sustainability.',
+    title: '',
+    description: '',
     category: 'Personality',
     scoring: 'Medium',
     quizType: 'personality' as 'personality' | 'trivia' | 'scored' | 'image-options',
@@ -52,6 +52,7 @@ const CreateQuiz: React.FC = () => {
     passingScore: 70,
     randomize: true,
     immediateResults: true,
+    editorsPick: false,
   });
   
   // Quiz results - customizable per quiz type
@@ -273,6 +274,13 @@ const CreateQuiz: React.FC = () => {
           minScore: r.minScore,
           maxScore: r.maxScore,
         })),
+        // Metadata for featured/editor's pick
+        metadata: {
+          featured: settings.editorsPick,
+          editorsPick: settings.editorsPick,
+          difficulty: quizDetails.scoring,
+          category: quizDetails.category,
+        },
       };
 
       // Debug: Log the payload being sent to the API
@@ -282,25 +290,26 @@ const CreateQuiz: React.FC = () => {
       const token = localStorage.getItem('admin_token') || undefined;
       const slugCandidate = (quizDetails.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       let res: any = undefined;
-      // If we have a createdSlug (we previously created/updated), update that one explicitly
+      
+      // If we have a createdSlug (we previously created/updated this quiz), update it
       if (createdSlug) {
         res = await api.updateQuiz(createdSlug, quizPayload, token);
       } else {
-        // Try updating an existing quiz that would have the same slug as the title
+        // ALWAYS create a new quiz - never try to update existing by slug
+        // This ensures each "Create Quiz" session creates a genuinely new quiz
         try {
-          res = await api.updateQuiz(slugCandidate, quizPayload, token);
-          // if update succeeds, use that slug
-          if (res) setCreatedSlug(slugCandidate);
+          res = await api.createQuiz(quizPayload, token);
+          const slug = res?.quiz?.slug || res?.slug || null;
+          if (slug) setCreatedSlug(slug);
         } catch (err: any) {
-          // If update failed because quiz not found (404), fall back to creating a new quiz
-          // api.ts throws the error message from backend, which might be "Quiz not found" without "404"
-          if (err.message && (err.message.includes('404') || err.message.toLowerCase().includes('not found'))) {
-            console.log('Quiz not found, creating new one...');
+          // If slug already exists, append timestamp to make it unique and try again
+          if (err.message && err.message.toLowerCase().includes('already exists')) {
+            const uniqueSlug = slugCandidate + '-' + Date.now();
+            quizPayload.slug = uniqueSlug;
             res = await api.createQuiz(quizPayload, token);
             const slug = res?.quiz?.slug || res?.slug || null;
             if (slug) setCreatedSlug(slug);
           } else {
-            // Other errors -> rethrow
             throw err;
           }
         }
@@ -496,6 +505,23 @@ const CreateQuiz: React.FC = () => {
                     <option>Medium</option>
                     <option>Hard</option>
                   </select>
+                </div>
+
+                {/* Editor's Pick Toggle */}
+                <div className="flex items-center justify-between p-4 bg-[#FFF8F3] border border-orange-200 rounded-[8px]">
+                  <div>
+                    <div className="text-[14px] font-semibold text-[#2B2B2B]">⭐ Editor's Pick</div>
+                    <div className="text-[12px] text-[#696F79]">Feature on homepage</div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={settings.editorsPick}
+                      onChange={(e) => setSettings({ ...settings, editorsPick: e.target.checked })}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C85103]"></div>
+                  </label>
                 </div>
               </div>
             </div>

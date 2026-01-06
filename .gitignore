@@ -57,3 +57,6 @@ Thumbs.db
 .parcel-cache/
 .next/
 out/
+
+# Backups
+scripts/backups/*.json

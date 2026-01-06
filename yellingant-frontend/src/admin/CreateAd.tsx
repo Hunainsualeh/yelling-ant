@@ -4,7 +4,7 @@ import { AdForm } from '../components/ads/AdForm';
 import Button from '../components/ui/Button';
 import { ChevronLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
-import { getAds } from '../utils/api';
+import { getAdById } from '../utils/api';
 import { useToast } from '../components/ui/toast';
 
 const CreateAd: React.FC = () => {
@@ -23,8 +23,8 @@ const CreateAd: React.FC = () => {
   const loadAdData = async () => {
     try {
       setLoading(true);
-      const ads = await getAds();
-      const ad = ads.find((a: any) => a.id === id);
+      // Fetch single ad by ID instead of all ads
+      const ad = await getAdById(id!);
       if (ad) {
         setAdData(ad);
       } else {
@@ -39,9 +39,9 @@ const CreateAd: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] flex">
+    <div className="h-screen bg-[#FFFFFF] flex overflow-hidden">
       <Sidebar variant="admin" />
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="flex-1 p-8 overflow-y-auto overflow-x-hidden min-w-0 h-screen">
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Link to="/admin/ads-management">
@@ -61,7 +61,7 @@ const CreateAd: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-w-4xl">
+          <div className="w-full">
             {loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-gray-500">Loading...</div>

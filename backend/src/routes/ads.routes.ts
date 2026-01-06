@@ -9,4 +9,10 @@ router.put('/:id', adsController.updateAd);
 router.delete('/:id', adsController.deleteAd);
 router.post('/:id/impression', adsController.trackImpression);
 
+// Bulk delete
+router.post('/bulk-delete', adsController.bulkDeleteAds);
+
+// Get single ad by ID (must be after /bulk-delete to avoid matching)
+router.get('/:id', adsController.getAdById);
+
 export default router;

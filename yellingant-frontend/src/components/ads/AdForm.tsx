@@ -8,7 +8,7 @@ import { Textarea } from "../ui/textarea"
 import { Switch } from "../ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { Upload, Info, Check } from "lucide-react"
-import { createAd, updateAd } from "../../utils/api"
+import { createAd, updateAd, uploadImages } from "../../utils/api"
 import { useToast } from "../ui/toast"
 import { SuccessModal } from "../ui/SuccessModal"
 import { AD_SLOTS } from "../slots/SlotsTable"
@@ -112,7 +112,7 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
 
   return (
     <>
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 max-w-full overflow-x-hidden min-w-0">
       <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="creative">Creative</TabsTrigger>
@@ -120,7 +120,7 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
       </TabsList>
 
       <TabsContent value="general">
-        <Card>
+        <Card className="overflow-x-hidden">
           <CardHeader>
             <CardTitle>General Information</CardTitle>
             <CardDescription>Basic details about your quiz advertisement campaign.</CardDescription>
@@ -153,21 +153,54 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
                 onChange={(e) => handleInputChange('description', e.target.value)}
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 overflow-x-hidden">
               <Label>Ad Slot Placement(s) <span className="text-red-500">*</span></Label>
               <p className="text-xs text-gray-500 mb-2">Select one or more slots where this ad should appear. The ad will be created for each selected slot.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              
+              {/* Quick Select Presets */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, slots: ['sidebar', 'quiz-main', 'quiz-result'] }))}
+                  className="px-3 py-1.5 text-xs font-medium rounded-full bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+                >
+                  🎯 All Quiz Page Slots
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, slots: ['sidebar'] }))}
+                  className="px-3 py-1.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                >
+                  📐 Sidebar Only (4 positions)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, slots: ['YA_QHOME_FEED_001', 'YA_QHOME_FEED_002', 'YA_QHOME_FEED_003'] }))}
+                  className="px-3 py-1.5 text-xs font-medium rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                >
+                  🏠 All Homepage Slots
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, slots: [] }))}
+                  className="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                >
+                  ✕ Clear All
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-full">
                 {AD_SLOTS.map((slot) => (
                   <div
                     key={slot.id}
                     onClick={() => toggleSlot(slot.id)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    className={`w-full box-border min-w-0 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                       formData.slots.includes(slot.id)
                         ? 'border-orange-500 bg-orange-50'
                         : 'border-gray-200 hover:border-gray-300 bg-white'
                     }`}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
                       <div className={`w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 ${
                         formData.slots.includes(slot.id)
                           ? 'bg-orange-500 border-orange-500'
@@ -177,9 +210,9 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
                           <Check className="w-3 h-3 text-white" />
                         )}
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm">{slot.name}</p>
+                          <p className="font-medium text-sm truncate">{slot.name}</p>
                           {!slot.multiAd && (
                             <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
                               1 ad only
@@ -191,7 +224,7 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 font-mono">{slot.id}</p>
+                        <p className="text-xs text-gray-500 font-mono break-words truncate">{slot.id}</p>
                         <p className="text-xs text-gray-400 mt-1">{slot.dimensions}</p>
                       </div>
                     </div>
@@ -226,7 +259,7 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
       </TabsContent>
 
       <TabsContent value="creative">
-        <Card>
+        <Card className="overflow-x-hidden">
           <CardHeader>
             <CardTitle>Creative Assets</CardTitle>
             <CardDescription>Upload images and configure the interactive quiz content.</CardDescription>
@@ -254,16 +287,21 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
                     type="file" 
                     className="hidden" 
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                          if (e.target?.result) {
-                            handleInputChange('heroImage', e.target.result as string);
+                        try {
+                          showToast('Uploading image...', 'info');
+                          // Upload via API - converts to WebP and returns URL
+                          const result = await uploadImages([file], [formData.name || 'Ad image']);
+                          if (result.files && result.files[0]) {
+                            handleInputChange('heroImage', result.files[0].url);
+                            showToast('Image uploaded successfully!', 'success');
                           }
-                        };
-                        reader.readAsDataURL(file);
+                        } catch (err: any) {
+                          console.error('Image upload failed:', err);
+                          showToast(err.message || 'Failed to upload image', 'error');
+                        }
                       }
                     }}
                   />
@@ -291,15 +329,6 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
               />
               <p className="text-xs text-gray-500">Where the user will be redirected when clicking the ad.</p>
             </div>
-
-            <div className="grid gap-4">
-              <Label>Quiz Questions (Interactive)</Label>
-              <div className="rounded-md border p-4 bg-gray-50">
-                <p className="text-sm text-gray-500 italic">
-                  Quiz question builder will be implemented in the next phase.
-                </p>
-              </div>
-            </div>
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button variant="outline" onClick={() => setActiveTab("general")}>
@@ -311,7 +340,7 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
       </TabsContent>
 
       <TabsContent value="targeting">
-        <Card>
+        <Card className="overflow-x-hidden">
           <CardHeader>
             <CardTitle>Targeting & Placement</CardTitle>
             <CardDescription>Select where and to whom this ad should be displayed.</CardDescription>
@@ -325,17 +354,6 @@ export function AdForm({ initialData, isEditing = false }: AdFormProps) {
             <div className="grid gap-2">
               <Label htmlFor="end-date">End Date (Optional)</Label>
               <Input id="end-date" type="date" />
-            </div>
-
-            <div className="p-4 rounded-lg bg-orange-50 border border-orange-200 flex gap-3">
-              <Info className="h-5 w-5 text-orange-600 shrink-0" />
-              <div className="text-sm">
-                <p className="font-semibold text-orange-600">Budget Cap Information</p>
-                <p className="text-gray-600">
-                  The system will automatically pause the ad once it reaches the impressions limit defined in the global
-                  settings.
-                </p>
-              </div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">

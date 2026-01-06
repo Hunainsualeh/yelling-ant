@@ -19,6 +19,69 @@ const clearAdsCache = () => {
   console.log('[AdsController] Cache cleared');
 };
 
+// Sanity limits for ad content
+const MAX_CONTENT_URL_LENGTH = 100 * 1024; // 100 KB
+const MAX_CONTENT_JSON_SIZE = 200 * 1024; // 200 KB
+
+const isDataUrl = (u?: string) => typeof u === 'string' && u.startsWith('data:');
+
+// Remove/replace oversized or inline data-uris before sending to clients
+const sanitizeAds = (rows: any[]) => {
+  return rows.map((r) => {
+    try {
+      if (r && r.content && typeof r.content === 'object') {
+        const url = r.content.url;
+        if (typeof url === 'string') {
+          if (isDataUrl(url) || url.length > MAX_CONTENT_URL_LENGTH) {
+            console.warn('[AdsController] Trimming oversized or inline ad content.url for ad id', r.id, 'len=', (url && url.length) || 0);
+            // Remove the bulky URL to avoid huge API responses; client will show placeholder
+            return { ...r, content: { ...r.content, url: '' } };
+          }
+        }
+        // also guard the full content JSON size
+        const contentJson = JSON.stringify(r.content || {});
+        if (contentJson.length > MAX_CONTENT_JSON_SIZE) {
+          console.warn('[AdsController] Trimming oversized ad content JSON for ad id', r.id, 'size=', contentJson.length);
+          return { ...r, content: { type: r.content.type || 'html' } };
+        }
+      }
+    } catch (e) {
+      console.warn('[AdsController] Error sanitizing ad', r && r.id, e);
+    }
+    return r;
+  });
+};
+
+/**
+ * GET /api/ads/:id
+ * Get a single ad by ID
+ */
+export const getAdById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const result = await query(
+      'SELECT id, name, brand, status, slot, content, impressions, ctr, created_at, updated_at FROM ads WHERE id = $1',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Ad not found' });
+      return;
+    }
+
+    // Sanitize before returning
+    const sanitized = sanitizeAds(result.rows)[0];
+    res.json(sanitized);
+  } catch (error: any) {
+    console.error('Error fetching ad by ID:', error);
+    res.status(500).json({ error: 'Failed to fetch ad', message: error.message });
+  }
+};
+
 /**
  * GET /api/ads
  * List all ads (for admin) or filter by slot (for public)
@@ -31,11 +94,12 @@ export const getAds = async (
   try {
     const { slot, status } = req.query;
     const cacheKey = getCacheKey(slot as string, status as string);
-    
+
     // Check cache first
     const cached = adsCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
       console.log('[AdsController] Serving from cache:', cacheKey);
+      // cached.data should already be sanitized, but guard anyway
       res.json(cached.data);
       return;
     }
@@ -60,15 +124,25 @@ export const getAds = async (
 
     queryText += ' ORDER BY created_at DESC LIMIT 50';
 
+    const qStart = Date.now();
     const result = await query(queryText, params);
-    
-    // Cache the result
+    const qDur = Date.now() - qStart;
+    if (qDur > 2000) {
+      console.warn('[AdsController] Slow ads query', { queryText, params, durationMs: qDur });
+    } else {
+      console.log('[AdsController] Ads query duration ms', qDur);
+    }
+
+    // Sanitize large/inline content before caching/returning
+    const sanitized = sanitizeAds(result.rows);
+
+    // Cache the sanitized result
     adsCache.set(cacheKey, {
-      data: result.rows,
+      data: sanitized,
       timestamp: Date.now()
     });
-    
-    res.json(result.rows);
+
+    res.json(sanitized);
   } catch (error: any) {
     console.error('Error fetching ads:', error);
     // Check if this is a table not found error
@@ -107,7 +181,17 @@ export const createAd = async (
 ): Promise<void> => {
   try {
     const { name, brand, status, slot, content } = req.body;
-    
+
+    // Validate content: reject inline data URLs or very large content to avoid storing huge blobs
+    if (content && typeof content === 'object') {
+      const url = content.url;
+      const contentSize = JSON.stringify(content).length;
+      if (isDataUrl(url) || (typeof url === 'string' && url.length > MAX_CONTENT_URL_LENGTH) || contentSize > MAX_CONTENT_JSON_SIZE) {
+        res.status(400).json({ error: 'Ad content is too large or contains inline data. Upload the image via /api/admin/upload and set content.url to the uploaded image URL.' });
+        return;
+      }
+    }
+
     // For single-ad slots, deactivate existing ads in that slot
     if (SINGLE_AD_SLOTS.includes(slot) && status === 'active') {
       await query(
@@ -117,7 +201,7 @@ export const createAd = async (
       );
       console.log(`[AdsController] Deactivated previous ads in slot: ${slot}`);
     }
-    
+
     const result = await query(
       `INSERT INTO ads (name, brand, status, slot, content)
        VALUES ($1, $2, $3, $4, $5)
@@ -148,6 +232,16 @@ export const updateAd = async (
     const { id } = req.params;
     const { name, brand, status, slot, content } = req.body;
 
+    // Validate content for updates as well
+    if (content && typeof content === 'object') {
+      const url = content.url;
+      const contentSize = JSON.stringify(content).length;
+      if (isDataUrl(url) || (typeof url === 'string' && url.length > MAX_CONTENT_URL_LENGTH) || contentSize > MAX_CONTENT_JSON_SIZE) {
+        res.status(400).json({ error: 'Ad content is too large or contains inline data. Use /api/admin/upload and set content.url to the uploaded image URL.' });
+        return;
+      }
+    }
+
     const result = await query(
       `UPDATE ads 
        SET name = COALESCE($1, name),
@@ -169,7 +263,10 @@ export const updateAd = async (
     // Clear cache after updating ad
     clearAdsCache();
 
-    res.json(result.rows[0]);
+    // Return sanitized row
+    const sanitized = sanitizeAds(result.rows)[0];
+
+    res.json(sanitized);
   } catch (error) {
     console.error('Error updating ad:', error);
     res.status(500).json({ error: 'Failed to update ad' });
@@ -220,5 +317,33 @@ export const trackImpression = async (
   } catch (error) {
     console.error('Error tracking impression:', error);
     res.status(500).json({ error: 'Failed to track impression' });
+  }
+};
+
+/**
+ * POST /api/ads/bulk-delete
+ * Body: { ids: number[] }
+ */
+export const bulkDeleteAds = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ error: 'ids array is required' });
+      return;
+    }
+
+    const result = await query('DELETE FROM ads WHERE id = ANY($1::int[]) RETURNING id', [ids]);
+
+    // Clear cache
+    clearAdsCache();
+
+    res.json({ message: 'Deleted ads', deleted: result.rows.map(r => r.id) });
+  } catch (error) {
+    console.error('Error bulk deleting ads:', error);
+    res.status(500).json({ error: 'Failed to delete ads' });
   }
 };

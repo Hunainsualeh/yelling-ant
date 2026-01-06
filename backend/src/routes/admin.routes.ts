@@ -15,7 +15,7 @@ import {
   getQuizVersions,
   configureSponsorship,
   getQuizPreview,
-  
+  bulkDeleteQuizzes,
 } from '../controllers/admin.controller';
 import { validateQuizPayload } from '../middleware/quizValidation.middleware';
 import { authMiddleware } from '../middleware/auth.middleware';
@@ -41,6 +41,9 @@ router.get('/images', authMiddleware, getImageList);
  * Query params: ?status=draft&limit=50&offset=0
  */
 router.get('/quiz', getAdminQuizList);
+
+// Bulk delete/archiving for quizzes
+router.post('/quiz/bulk-delete', authMiddleware, bulkDeleteQuizzes);
 
 /**
  * POST /api/admin/quiz
