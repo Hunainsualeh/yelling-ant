@@ -15,6 +15,10 @@ import {
 } from "../ui/dropdown-menu"
 import { AdPreviewModal } from "./AdPreviewModal"
 import { request } from "../../utils/api"
+import { ConfirmDialog } from "../ui/ConfirmDialog"
+import { Alert, AlertTitle, AlertDescription } from "../ui/alert"
+import Loader from '../ui/Loader'
+import { useState } from "react"
 
 interface AdsTableProps {
   ads: any[];
@@ -40,15 +44,27 @@ export function AdsTable({
   uniqueSlots
 }: AdsTableProps) {
   const [previewAd, setPreviewAd] = useState<any | null>(null)
+  const [deleteAdId, setDeleteAdId] = useState<number | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleDelete = async (adId: number) => {
-    if (!confirm('Are you sure you want to delete this ad?')) return;
+  const confirmDelete = (adId: number) => {
+    setDeleteAdId(adId)
+  };
+
+  const performDelete = async () => {
+    if (!deleteAdId) return;
+    setIsDeleting(true)
+    setError(null)
     try {
-      await request(`/api/ads/${adId}`, { method: 'DELETE' });
+      await request(`/api/ads/${deleteAdId}`, { method: 'DELETE' });
       window.location.reload();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to delete ad', e);
-      alert('Failed to delete ad');
+      setError('Failed to delete ad: ' + (e?.message || 'Unknown error'));
+    } finally {
+      setIsDeleting(false)
+      setDeleteAdId(null)
     }
   };
 
@@ -121,7 +137,7 @@ export function AdsTable({
           <TableBody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-gray-500">Loading ads...</td>
+                <td colSpan={7} className="text-center py-8"><Loader message="Loading ads..." /></td>
               </tr>
             ) : ads.length === 0 ? (
               <tr>
@@ -177,7 +193,7 @@ export function AdsTable({
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           className="text-red-600"
-                          onClick={() => handleDelete(ad.id)}
+                          onClick={() => confirmDelete(ad.id)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete Ad
@@ -195,6 +211,25 @@ export function AdsTable({
       {previewAd && (
         <AdPreviewModal ad={previewAd} isOpen={!!previewAd} onClose={() => setPreviewAd(null)} />
       )}
+
+      {error && (
+        <div className="mt-4">
+          <Alert className="bg-red-50 border-red-200">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={deleteAdId !== null}
+        onOpenChange={(v) => { if (!v) setDeleteAdId(null) }}
+        onConfirm={performDelete}
+        title="Delete ad?"
+        description="Are you sure you want to delete this ad? This action cannot be undone."
+        confirmText="Delete"
+        type="danger"
+      />
     </div>
   )
 }

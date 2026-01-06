@@ -18,7 +18,7 @@ export const connectDatabase = async (): Promise<void> => {
       config.connectionString = process.env.DATABASE_URL;
       // Neon/Cloud DBs usually require SSL
       if (process.env.DATABASE_URL.includes('sslmode=require')) {
-         config.ssl = { rejectUnauthorized: false };
+        config.ssl = { rejectUnauthorized: false };
       }
     } else {
       config.host = process.env.DB_HOST || 'localhost';
@@ -175,6 +175,7 @@ const initializeSchema = async (): Promise<void> => {
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_ads_slot ON ads(slot);
       CREATE INDEX IF NOT EXISTS idx_ads_status ON ads(status);
+      CREATE INDEX IF NOT EXISTS idx_ads_created_at ON ads(created_at DESC);
     `);
 
     await client.query('COMMIT');

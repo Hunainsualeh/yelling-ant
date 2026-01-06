@@ -16,8 +16,11 @@ export const getQuizList = async (
     let queryText = `
       SELECT id, slug, title, quiz_data->>'dek' as dek, 
              quiz_data->>'hero_image' as hero_image,
+             quiz_data->>'heroImage' as cover_image,
              quiz_data->>'primary_colony' as primary_colony,
              quiz_data->'tags' as tags,
+             quiz_data->'metadata' as metadata,
+             quiz_data as quiz_data,
              created_at, updated_at
       FROM quizzes
       WHERE status = 'published'
@@ -58,6 +61,77 @@ export const getQuizList = async (
       offset: parseInt(offset as string),
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/quiz/search
+ * Search quizzes with normalized matching (title, description, category, tags)
+ */
+export const searchQuizzes = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { q, limit = '20', offset = '0' } = req.query;
+
+    if (!q || typeof q !== 'string' || q.trim().length === 0) {
+      res.json({ quizzes: [], total: 0, query: '' });
+      return;
+    }
+
+    // Normalize search query: trim, lowercase
+    const searchTerm = q.trim().toLowerCase();
+    // Create pattern for ILIKE (partial match anywhere in string)
+    const pattern = `%${searchTerm}%`;
+
+    // Search in title, description (dek), category, and convert to searchable form
+    const queryText = `
+      SELECT id, slug, title, 
+             quiz_data->>'dek' as dek,
+             quiz_data->>'description' as description, 
+             quiz_data->>'hero_image' as hero_image,
+             quiz_data->>'heroImage' as cover_image,
+             quiz_data->>'primary_colony' as primary_colony,
+             quiz_data->'tags' as tags,
+             quiz_data->'metadata' as metadata,
+             created_at, updated_at
+      FROM quizzes
+      WHERE status = 'published'
+        AND (
+          LOWER(title) LIKE $1
+          OR LOWER(quiz_data->>'dek') LIKE $1
+          OR LOWER(quiz_data->>'description') LIKE $1
+          OR LOWER(quiz_data->>'primary_colony') LIKE $1
+          OR LOWER(slug) LIKE $1
+          OR EXISTS (
+            SELECT 1 FROM jsonb_array_elements_text(quiz_data->'tags') tag 
+            WHERE LOWER(tag) LIKE $1
+          )
+        )
+      ORDER BY 
+        CASE 
+          WHEN LOWER(title) LIKE $1 THEN 1
+          WHEN LOWER(quiz_data->>'primary_colony') LIKE $1 THEN 2
+          ELSE 3
+        END,
+        created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
+
+    const result = await query(queryText, [pattern, limit, offset]);
+
+    res.json({
+      quizzes: result.rows,
+      total: result.rows.length,
+      query: searchTerm,
+      limit: parseInt(limit as string),
+      offset: parseInt(offset as string),
+    });
+  } catch (error) {
+    console.error('Search error:', error);
     next(error);
   }
 };
@@ -131,7 +205,7 @@ export const submitQuiz = async (
     const { answers, userId, sessionId } = req.body;
 
     // Track quiz start event
-    try { await trackAnalytics(slug, 'quiz_start', { user_id: userId || null, session_id: sessionId || null, timestamp: new Date() }); } catch (e) {}
+    try { await trackAnalytics(slug, 'quiz_start', { user_id: userId || null, session_id: sessionId || null, timestamp: new Date() }); } catch (e) { }
 
     // Fetch quiz
     const result = await query(
@@ -154,7 +228,7 @@ export const submitQuiz = async (
     for (const answer of answers) {
       try {
         await trackAnalytics(slug, 'question_answer', { user_id: userId || null, session_id: sessionId || null, question_id: answer.questionId, selected: answer.selectedOptions, timestamp: new Date() });
-      } catch (e) {}
+      } catch (e) { }
 
       // For trivia, compute immediate correctness for each answer
       const question = quiz.questions.find((q: any) => q.id === answer.questionId);
@@ -171,8 +245,8 @@ export const submitQuiz = async (
     const calculatedResult = calculateQuizResult(quiz, answers);
 
     // Track completion event and result_view
-    try { await trackAnalytics(slug, 'quiz_completed', { user_id: userId || null, session_id: sessionId || null, outcome: calculatedResult.outcome_key, timestamp: new Date() }); } catch (e) {}
-    try { await trackAnalytics(slug, 'result_view', { user_id: userId || null, session_id: sessionId || null, outcome: calculatedResult.outcome_key, timestamp: new Date() }); } catch (e) {}
+    try { await trackAnalytics(slug, 'quiz_completed', { user_id: userId || null, session_id: sessionId || null, outcome: calculatedResult.outcome_key, timestamp: new Date() }); } catch (e) { }
+    try { await trackAnalytics(slug, 'result_view', { user_id: userId || null, session_id: sessionId || null, outcome: calculatedResult.outcome_key, timestamp: new Date() }); } catch (e) { }
 
     res.json({ ...calculatedResult, feedback: perQuestionFeedback });
   } catch (error) {

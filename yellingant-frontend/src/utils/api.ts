@@ -19,7 +19,7 @@ if (!API_BASE) {
 
 export async function request(path: string, opts: RequestInit = {}) {
   const url = API_BASE + path;
-  const headers = { ...(opts.headers || {}), } as Record<string,string>;
+  const headers = { ...(opts.headers || {}), } as Record<string, string>;
   // JSON requests default to application/json
   if (!opts.body || typeof opts.body === 'string') {
     if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
@@ -49,15 +49,15 @@ export async function request(path: string, opts: RequestInit = {}) {
   try {
     const res = await fetch(url, { credentials: 'include', ...opts, headers, signal: controller.signal });
     clearTimeout(timeoutId);
-    
+
     if (!res.ok) {
       const text = await res.text();
       try {
-          const json = JSON.parse(text);
-          throw new Error(json.error?.message || json.error || text);
+        const json = JSON.parse(text);
+        throw new Error(json.error?.message || json.error || text);
       } catch (e: any) {
-          if (e.message && !e.message.includes('JSON')) throw e;
-          throw new Error(`API ${res.status} ${res.statusText}: ${text}`);
+        if (e.message && !e.message.includes('JSON')) throw e;
+        throw new Error(`API ${res.status} ${res.statusText}: ${text}`);
       }
     }
     // attempt to parse json, fall back to text
@@ -106,7 +106,7 @@ export async function uploadImages(files: File[], alt_texts: string[], token?: s
   fd.append('alt_texts', JSON.stringify(alt_texts || []));
 
   let authHeader = token || (typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem('admin_token') : undefined);
-  
+
   if (!authHeader && import.meta.env.DEV) {
     authHeader = 'ayW1YVN3g72H';
   }
@@ -126,7 +126,7 @@ export async function uploadImages(files: File[], alt_texts: string[], token?: s
     } catch (e: any) {
       // if parsing failed or if the error we threw above was caught (it won't be caught here, but just in case)
       if (e.message && e.message !== 'Unexpected token' && !e.message.includes('JSON')) {
-         throw e;
+        throw e;
       }
       throw new Error(`Upload failed ${res.status}: ${txt}`);
     }
@@ -202,6 +202,15 @@ export async function deleteAd(id: string, token?: string): Promise<any> {
   });
 }
 
+/** Bulk delete ads (admin) */
+export async function bulkDeleteAds(ids: number[], token?: string): Promise<any> {
+  return request(`/api/ads/bulk-delete`, {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+}
+
 /** Get all ads */
 export async function getAds(token?: string): Promise<any> {
   return request(`/api/ads`, {
@@ -209,17 +218,34 @@ export async function getAds(token?: string): Promise<any> {
   });
 }
 
-export default { 
-  getQuiz, 
-  submitQuiz, 
-  uploadImages, 
-  createQuiz, 
-  updateQuiz, 
-  publishQuiz, 
+/** Get a single ad by ID */
+export async function getAdById(id: string, token?: string): Promise<any> {
+  return request(`/api/ads/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+}
+
+/** Bulk archive quizzes (admin) */
+export async function bulkDeleteQuizzes(slugs: string[], token?: string): Promise<any> {
+  return request(`/api/admin/quiz/bulk-delete`, {
+    method: 'POST',
+    body: JSON.stringify({ slugs }),
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+}
+
+export default {
+  getQuiz,
+  submitQuiz,
+  uploadImages,
+  createQuiz,
+  updateQuiz,
+  publishQuiz,
   getAllQuizzes,
   deleteQuiz,
   createAd,
   updateAd,
   deleteAd,
-  getAds
+  getAds,
+  getAdById
 };

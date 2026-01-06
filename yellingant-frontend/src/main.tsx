@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import QuizPage from './quiz/page.tsx'
 import QuizResultPage from './quiz/result-page';
+import SearchResults from './pages/SearchResults';
 import AdminDashboard from './admin/Admindashboard';
 import CreateQuiz from './admin/CreateQuiz';
 import QuizList from './admin/QuizList';
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />} />
+          <Route path="/search" element={<SearchResults />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/quizzes" element={<QuizList />} />
           <Route path="/admin/drafts" element={<QuizDrafts />} />

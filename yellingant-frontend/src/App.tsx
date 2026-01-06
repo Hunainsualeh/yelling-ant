@@ -41,7 +41,7 @@ function App() {
       </div>
 
       {/* Third Feed Ad (after Footer) */}
-      <AdContainer heightClass="h-[266px]" widthClass="w-[100%] mx-auto" className="rounded-tl-[4px] rounded-tr-[4px] m-0">
+      <AdContainer heightClass="h-[266px]" widthClass="w-[100%] mx-auto" className="rounded-tl-sm rounded-tr-sm m-0">
         <AdSlot slotId="YA_QHOME_FEED_003" className="w-full h-full" />
       </AdContainer>
     </div>

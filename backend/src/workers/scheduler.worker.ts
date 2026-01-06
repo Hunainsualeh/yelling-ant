@@ -38,26 +38,4 @@ if (require.main === module) {
 }
 
 export { publishScheduledQuizzes };
-import { connectDatabase, query, closeDatabase } from '../config/database';
 
-const run = async () => {
-  try {
-    await connectDatabase();
-
-    const result = await query(
-      `UPDATE quizzes
-       SET status = 'published', published_at = now(), updated_at = now()
-       WHERE status = 'scheduled' AND published_at IS NOT NULL AND published_at <= now()
-       RETURNING id, slug, published_at`
-    );
-
-    console.log(`Processed ${result.rows.length} scheduled quizzes`);
-  } catch (err) {
-    console.error('Scheduler error', err);
-  } finally {
-    await closeDatabase();
-    process.exit(0);
-  }
-};
-
-run();

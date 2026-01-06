@@ -3,6 +3,7 @@ import { Badge } from "../ui/shadcn-badge"
 import { Monitor, Smartphone, Tablet } from "lucide-react"
 import { useState, useEffect } from "react"
 import { getAds } from "../../utils/api"
+import Loader from '../ui/Loader' 
 
 // Define all available ad slots on the website
 // multiAd: true means multiple ads can be active at once
@@ -126,7 +127,7 @@ export function SlotsTable() {
   }, []);
 
   if (loading) {
-    return <div className="p-4 text-center text-gray-500">Loading slots...</div>;
+    return <div className="p-4 text-center"><Loader message="Loading slots..." /></div>;
   }
 
   return (

@@ -136,7 +136,7 @@ const Sidebar: React.FC<{ variant?: SidebarVariant }> = ({ variant = 'admin' }) 
             collapsed={collapsed}
           />
 */}
-          <NavItem
+          {/* <NavItem
             label="Settings"
             icon={
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
@@ -144,7 +144,7 @@ const Sidebar: React.FC<{ variant?: SidebarVariant }> = ({ variant = 'admin' }) 
               </svg>
             }
             collapsed={collapsed}
-          />
+          /> */}
  {/* notificaition 
           <NavItem
             label="Support"

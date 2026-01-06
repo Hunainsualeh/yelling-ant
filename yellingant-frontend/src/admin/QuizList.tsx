@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Sidebar } from '../components';
-import { getAllQuizzes, deleteQuiz, publishQuiz } from '../utils/api';
+import { getAllQuizzes, deleteQuiz, publishQuiz, bulkDeleteQuizzes } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/ui/toast';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import Loader from '../components/ui/Loader';
 import { Edit, Trash2, Eye, EyeOff, FileText, Plus } from 'lucide-react';
 
 interface Quiz {
@@ -23,6 +24,8 @@ const QuizList: React.FC = () => {
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [, setActionLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
+  const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -153,7 +156,7 @@ const QuizList: React.FC = () => {
 
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="text-gray-500">Loading quizzes...</div>
+            <Loader message="Loading quizzes..." />
           </div>
         ) : filteredQuizzes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500">
@@ -169,6 +172,12 @@ const QuizList: React.FC = () => {
               >
                 <div className="min-w-0 flex-1 mr-4">
                   <div className="flex items-center gap-2 mb-1">
+                    <input
+                      type="checkbox"
+                      className="mr-2"
+                      checked={selectedSlugs.includes(q.slug)}
+                      onChange={(e) => setSelectedSlugs(prev => e.target.checked ? [...prev, q.slug] : prev.filter(s => s !== q.slug))}
+                    />
                     <div className="font-medium truncate" title={q.title}>
                       {q.title}
                     </div>
@@ -242,6 +251,17 @@ const QuizList: React.FC = () => {
         )}
       </main>
 
+      {/* Bulk delete button */}
+      <div className="fixed bottom-6 right-6">
+        <button
+          disabled={selectedSlugs.length === 0}
+          onClick={() => setBulkDeleteDialogOpen(true)}
+          className={`px-4 py-2 rounded-lg text-white ${selectedSlugs.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
+        >
+          Delete Selected ({selectedSlugs.length})
+        </button>
+      </div>
+
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
@@ -249,6 +269,30 @@ const QuizList: React.FC = () => {
         onConfirm={handleDelete}
         title="Delete Quiz"
         description={`Are you sure you want to delete "${selectedQuiz?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
+      />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        onConfirm={async () => {
+          try {
+            const token = localStorage.getItem('admin_token') || undefined;
+            await bulkDeleteQuizzes(selectedSlugs, token);
+            showToast('Selected quizzes archived', 'success');
+            setQuizzes(quizzes.filter(q => !selectedSlugs.includes(q.slug)));
+            setSelectedSlugs([]);
+          } catch (e: any) {
+            console.error('Bulk quiz delete failed', e);
+            showToast(e.message || 'Bulk delete failed', 'error');
+          } finally {
+            setBulkDeleteDialogOpen(false);
+          }
+        }}
+        title="Delete selected quizzes"
+        description={`Are you sure you want to archive ${selectedSlugs.length} selected quiz(es)? This action cannot be undone.`}
         confirmText="Delete"
         type="danger"
       />

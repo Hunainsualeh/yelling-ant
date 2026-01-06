@@ -42,6 +42,9 @@ const resultSchema = Joi.object({
   description: Joi.string().allow('').optional(),
   image: Joi.string().allow('').optional(),
   min_score: Joi.number().optional(),
+  minScore: Joi.number().optional(), // Alternative field name
+  max_score: Joi.number().optional(),
+  maxScore: Joi.number().optional(), // Alternative field name
   shareText: Joi.string().allow('').optional(),
 });
 
@@ -69,6 +72,12 @@ const quizSchema = Joi.object({
   category: Joi.string().optional(),
   scoring: Joi.string().optional(),
   settings: Joi.object().optional(),
+  metadata: Joi.object({
+    featured: Joi.boolean().optional(),
+    editorsPick: Joi.boolean().optional(),
+    difficulty: Joi.string().optional(),
+    category: Joi.string().optional(),
+  }).optional(),
 }).unknown(true);
 
 export const validateQuizPayload = (req: Request, res: Response, next: NextFunction): void => {

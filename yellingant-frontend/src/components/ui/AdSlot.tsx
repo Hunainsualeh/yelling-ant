@@ -119,22 +119,37 @@ const AdSlot = ({ slotId, className = '', variant = 'default', position }: AdSlo
 
       const hasImageError = imageErrors.has(ad.id);
 
-      if (ad.content.type === 'image' && ad.content.url && !hasImageError) {
+      const contentUrl = ad.content.url;
+      const isHugeUrl = typeof contentUrl === 'string' && contentUrl.length > 200000; // server should prevent this, but be defensive
+
+      if (isHugeUrl) {
+          console.warn('[AdSlot] Skipping huge image URL for ad', ad.id);
+          return (
+            <div className="relative text-center p-4 select-none">
+              <p className="text-gray-400 text-sm font-medium">Advertisement</p>
+              <p className="text-gray-300 text-xs mt-1">Image too large to display</p>
+            </div>
+          );
+      }
+
+      if (ad.content.type === 'image' && contentUrl && !hasImageError) {
           return (
               <div className="relative w-full h-full">
                   <AdBadge />
                   <a href={ad.content.link || '#'} target="_blank" rel="noopener noreferrer" className="w-full h-full block">
                       <img 
-                        src={ad.content.url} 
+                        src={contentUrl} 
                         alt={ad.name || 'Ad'} 
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover" 
                         onError={(e) => {
-                          console.error('[AdSlot] Image failed to load:', ad.content.url);
+                          console.error('[AdSlot] Image failed to load:', contentUrl);
                           setImageErrors(prev => new Set(prev).add(ad.id));
                           e.currentTarget.style.display = 'none';
                         }}
                         onLoad={() => {
-                          console.log('[AdSlot] Image loaded successfully:', ad.content.url);
+                          console.log('[AdSlot] Image loaded successfully:', contentUrl);
                         }}
                       />
                   </a>
@@ -217,8 +232,9 @@ const AdSlot = ({ slotId, className = '', variant = 'default', position }: AdSlo
   const ad = ads[0];
   return (
     <div 
-      className={`bg-gray-100 rounded-lg flex items-center justify-center min-h-[120px] overflow-hidden relative ${className}`}
+      className={`bg-gray-100 flex items-center justify-center overflow-hidden relative w-full h-full ${className}`}
       data-ad-slot={slotId}
+      style={{ minHeight: '120px' }}
     >
       {renderAdContent(ad, slotId || 'Ad Slot')}
     </div>

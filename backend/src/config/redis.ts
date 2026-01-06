@@ -1,6 +1,6 @@
 import Redis from 'ioredis';
 
-let client: Redis.Redis | null = null;
+let client: Redis | null = null;
 
 const createMock = () => {
   const noop = async () => null;
@@ -13,15 +13,15 @@ const createMock = () => {
     once: () => {},
     disconnect: () => {},
   };
-  return mock as Redis.Redis;
+  return mock as unknown as Redis;
 };
 
-export const getRedis = (): Redis.Redis => {
+export const getRedis = (): Redis => {
   if (!client) {
     try {
       client = new Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
       client.on('connect', () => console.log('Redis connected'));
-      client.on('error', (err) => {
+      client.on('error', (err: any) => {
         console.warn('Redis error', err && err.message ? err.message : err);
       });
 
