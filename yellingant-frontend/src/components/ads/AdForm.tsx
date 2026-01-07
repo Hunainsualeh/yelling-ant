@@ -7,7 +7,7 @@ import Button from "../ui/Button" // Note: Button.tsx is capitalized in the file
 import { Textarea } from "../ui/textarea"
 import { Switch } from "../ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { Upload, Info, Check } from "lucide-react"
+import { Upload, Check } from "lucide-react"
 import { createAd, updateAd, uploadImages } from "../../utils/api"
 import { useToast } from "../ui/toast"
 import { SuccessModal } from "../ui/SuccessModal"

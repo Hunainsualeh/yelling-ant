@@ -18,7 +18,6 @@ import { request } from "../../utils/api"
 import { ConfirmDialog } from "../ui/ConfirmDialog"
 import { Alert, AlertTitle, AlertDescription } from "../ui/alert"
 import Loader from '../ui/Loader'
-import { useState } from "react"
 
 interface AdsTableProps {
   ads: any[];
@@ -45,7 +44,6 @@ export function AdsTable({
 }: AdsTableProps) {
   const [previewAd, setPreviewAd] = useState<any | null>(null)
   const [deleteAdId, setDeleteAdId] = useState<number | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const confirmDelete = (adId: number) => {
@@ -54,7 +52,6 @@ export function AdsTable({
 
   const performDelete = async () => {
     if (!deleteAdId) return;
-    setIsDeleting(true)
     setError(null)
     try {
       await request(`/api/ads/${deleteAdId}`, { method: 'DELETE' });
@@ -63,8 +60,7 @@ export function AdsTable({
       console.error('Failed to delete ad', e);
       setError('Failed to delete ad: ' + (e?.message || 'Unknown error'));
     } finally {
-      setIsDeleting(false)
-      setDeleteAdId(null)
+      setDeleteAdId(null);
     }
   };
 
